@@ -1,5 +1,23 @@
-import { useState } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import './App.css'
+
+const HEADER_OFFSET = 80
+const FAVORITOS_KEY = 'meuRoteiro_favoritos'
+
+/* ── Scroll helper ── */
+function scrollToSection(id, { focus } = {}) {
+  const el = document.getElementById(id)
+  if (!el) return
+  const top = el.getBoundingClientRect().top + window.scrollY - HEADER_OFFSET
+  window.scrollTo({ top, behavior: 'smooth' })
+  if (focus) {
+    setTimeout(() => document.getElementById(focus)?.focus(), 450)
+  }
+}
+
+function formatBRL(value) {
+  return `R$ ${Math.round(value).toLocaleString('pt-BR')}`
+}
 
 /* ── SVG Icons ── */
 function IconMap({ size = 20 }) {
@@ -43,9 +61,9 @@ function IconCompass({ size = 20 }) {
   )
 }
 
-function IconHeart({ size = 20 }) {
+function IconHeart({ size = 20, filled = false }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg width={size} height={size} viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
     </svg>
   )
@@ -91,13 +109,21 @@ function IconClock({ size = 14 }) {
   )
 }
 
+function IconAlert({ size = 18 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" />
+    </svg>
+  )
+}
+
 /* ── Mock Data ── */
 const NAV_LINKS = [
-  { href: '#destinos', label: 'Destinos' },
-  { href: '#como-funciona', label: 'Como funciona' },
-  { href: '#roteiro', label: 'Roteiros' },
-  { href: '#orcamento', label: 'Orçamento' },
-  { href: '#favoritos', label: 'Favoritos' },
+  { id: 'destinos', label: 'Destinos' },
+  { id: 'como-funciona', label: 'Como funciona' },
+  { id: 'roteiros', label: 'Roteiros' },
+  { id: 'orcamento', label: 'Orçamento' },
+  { id: 'favoritos', label: 'Favoritos' },
 ]
 
 const METRICAS = [
@@ -107,13 +133,30 @@ const METRICAS = [
   { valor: '< 5 min', label: 'planejamento rápido', icon: IconSpark },
 ]
 
+const ESTILOS = ['Econômica', 'Família', 'Casal', 'Aventura', 'Luxo']
+
+const ESTILO_MULTIPLIER = {
+  Econômica: 0.78,
+  Família: 1.0,
+  Casal: 1.12,
+  Aventura: 1.08,
+  Luxo: 1.65,
+}
+
+const ORCAMENTO_OPCOES = [
+  { value: '1500', label: 'Até R$ 1.500' },
+  { value: '3000', label: 'R$ 1.500 – R$ 3.000' },
+  { value: '6000', label: 'R$ 3.000 – R$ 6.000' },
+  { value: '6000+', label: 'Acima de R$ 6.000' },
+]
+
 const DESTINOS = [
   {
     id: 'gramado',
     nome: 'Gramado',
     descricao: 'Charme europeu, chocolate artesanal e paisagens de serra.',
     tags: ['Romântico', 'Família'],
-    preco: 'R$ 1.800',
+    precoBase: 1800,
     tempo: '3–4 dias',
     gradient: 'grad-gramado',
   },
@@ -122,7 +165,7 @@ const DESTINOS = [
     nome: 'Florianópolis',
     descricao: 'Praias paradisíacas, trilhas e gastronomia costeira.',
     tags: ['Praia', 'Aventura'],
-    preco: 'R$ 2.200',
+    precoBase: 2200,
     tempo: '4–5 dias',
     gradient: 'grad-floripa',
   },
@@ -131,7 +174,7 @@ const DESTINOS = [
     nome: 'Balneário Camboriú',
     descricao: 'Arranha-céus à beira-mar e vida noturna vibrante.',
     tags: ['Praia', 'Cidade'],
-    preco: 'R$ 2.500',
+    precoBase: 2500,
     tempo: '3–5 dias',
     gradient: 'grad-bc',
   },
@@ -140,7 +183,7 @@ const DESTINOS = [
     nome: 'Foz do Iguaçu',
     descricao: 'Cataratas majestosas e contato com a natureza.',
     tags: ['Aventura', 'Família'],
-    preco: 'R$ 2.800',
+    precoBase: 2800,
     tempo: '3–4 dias',
     gradient: 'grad-foz',
   },
@@ -149,7 +192,7 @@ const DESTINOS = [
     nome: 'Rio de Janeiro',
     descricao: 'Ícones mundiais, samba e paisagens inesquecíveis.',
     tags: ['Cidade', 'Praia'],
-    preco: 'R$ 2.400',
+    precoBase: 2400,
     tempo: '4–6 dias',
     gradient: 'grad-rio',
   },
@@ -158,11 +201,116 @@ const DESTINOS = [
     nome: 'São Paulo',
     descricao: 'Capital cultural com gastronomia e arte de classe mundial.',
     tags: ['Cidade', 'Econômico'],
-    preco: 'R$ 1.600',
+    precoBase: 1600,
     tempo: '3–5 dias',
     gradient: 'grad-sp',
   },
 ]
+
+const ROTEIROS_POR_DESTINO = {
+  gramado: [
+    { titulo: 'Chegada e centro', periodos: [
+      { periodo: 'Manhã', atividade: 'Check-in e café colonial', tempo: '2h', custo: 80 },
+      { periodo: 'Tarde', atividade: 'Rua Coberta e Mini Mundo', tempo: '4h', custo: 120 },
+      { periodo: 'Noite', atividade: 'Jantar romântico no Lago Negro', tempo: '3h', custo: 180 },
+    ]},
+    { titulo: 'Natureza e chocolate', periodos: [
+      { periodo: 'Manhã', atividade: 'Cascata do Caracol de bondinho', tempo: '3h', custo: 95 },
+      { periodo: 'Tarde', atividade: 'Fábrica de chocolate e almoço na serra', tempo: '4h', custo: 150 },
+      { periodo: 'Noite', atividade: 'Jantar especial e passeio noturno', tempo: '2h', custo: 200 },
+    ]},
+    { titulo: 'Despedida', periodos: [
+      { periodo: 'Manhã', atividade: 'Café da manhã e souvenirs', tempo: '2h', custo: 90 },
+      { periodo: 'Tarde', atividade: 'Centro histórico e últimas compras', tempo: '3h', custo: 60 },
+      { periodo: 'Noite', atividade: 'Retorno com memórias incríveis', tempo: '—', custo: 350 },
+    ]},
+  ],
+  florianopolis: [
+    { titulo: 'Praias do norte', periodos: [
+      { periodo: 'Manhã', atividade: 'Praia da Joaquina e dunas', tempo: '3h', custo: 60 },
+      { periodo: 'Tarde', atividade: 'Almoço de frutos do mar em Lagoa', tempo: '3h', custo: 140 },
+      { periodo: 'Noite', atividade: 'Pôr do sol na Lagoa da Conceição', tempo: '2h', custo: 80 },
+    ]},
+    { titulo: 'Trilhas e natureza', periodos: [
+      { periodo: 'Manhã', atividade: 'Trilha da Lagoinha do Leste', tempo: '4h', custo: 40 },
+      { periodo: 'Tarde', atividade: 'Almoço na praia e descanso', tempo: '3h', custo: 100 },
+      { periodo: 'Noite', atividade: 'Jantar no centro histórico', tempo: '2h', custo: 160 },
+    ]},
+    { titulo: 'Cultura e despedida', periodos: [
+      { periodo: 'Manhã', atividade: 'Mercado Público e azulejos', tempo: '2h', custo: 50 },
+      { periodo: 'Tarde', atividade: 'Praia do Campeche ou surf', tempo: '4h', custo: 90 },
+      { periodo: 'Noite', atividade: 'Retorno ao continente', tempo: '—', custo: 280 },
+    ]},
+  ],
+  bc: [
+    { titulo: 'Orla e teleférico', periodos: [
+      { periodo: 'Manhã', atividade: 'Check-in e passeio pela Central', tempo: '2h', custo: 70 },
+      { periodo: 'Tarde', atividade: 'Teleférico Unipraias e praias', tempo: '4h', custo: 180 },
+      { periodo: 'Noite', atividade: 'Jantar com vista para o mar', tempo: '3h', custo: 200 },
+    ]},
+    { titulo: 'Aventura e parques', periodos: [
+      { periodo: 'Manhã', atividade: 'Parque Unipraias e tirolesa', tempo: '3h', custo: 220 },
+      { periodo: 'Tarde', atividade: 'Almoço na Barra Sul', tempo: '3h', custo: 130 },
+      { periodo: 'Noite', atividade: 'Vida noturna na Avenida Atlântica', tempo: '4h', custo: 150 },
+    ]},
+    { titulo: 'Relax e retorno', periodos: [
+      { periodo: 'Manhã', atividade: 'Praia Brava ou Praia dos Amores', tempo: '3h', custo: 40 },
+      { periodo: 'Tarde', atividade: 'Compras e café na orla', tempo: '2h', custo: 80 },
+      { periodo: 'Noite', atividade: 'Despedida e retorno', tempo: '—', custo: 320 },
+    ]},
+  ],
+  foz: [
+    { titulo: 'Cataratas brasileiras', periodos: [
+      { periodo: 'Manhã', atividade: 'Parque Nacional das Cataratas', tempo: '4h', custo: 180 },
+      { periodo: 'Tarde', atividade: 'Almoço no parque e passeio de barco', tempo: '3h', custo: 250 },
+      { periodo: 'Noite', atividade: 'Jantar e show das Cataratas', tempo: '3h', custo: 200 },
+    ]},
+    { titulo: 'Tríplice fronteira', periodos: [
+      { periodo: 'Manhã', atividade: 'Marco das Três Fronteiras', tempo: '2h', custo: 60 },
+      { periodo: 'Tarde', atividade: 'Parque das Aves e Itaipu', tempo: '5h', custo: 190 },
+      { periodo: 'Noite', atividade: 'Jantar na Argentina (Ciudad del Este)', tempo: '3h', custo: 170 },
+    ]},
+    { titulo: 'Natureza e despedida', periodos: [
+      { periodo: 'Manhã', atividade: 'Macuco Safari ou helicóptero', tempo: '3h', custo: 350 },
+      { periodo: 'Tarde', atividade: 'Compras de souvenirs e café', tempo: '2h', custo: 70 },
+      { periodo: 'Noite', atividade: 'Retorno ao aeroporto', tempo: '—', custo: 400 },
+    ]},
+  ],
+  rio: [
+    { titulo: 'Ícones do Rio', periodos: [
+      { periodo: 'Manhã', atividade: 'Cristo Redentor e Pão de Açúcar', tempo: '5h', custo: 220 },
+      { periodo: 'Tarde', atividade: 'Almoço em Santa Teresa', tempo: '2h', custo: 120 },
+      { periodo: 'Noite', atividade: 'Lapa e samba ao vivo', tempo: '4h', custo: 100 },
+    ]},
+    { titulo: 'Praias e natureza', periodos: [
+      { periodo: 'Manhã', atividade: 'Praia de Copacabana e Ipanema', tempo: '3h', custo: 50 },
+      { periodo: 'Tarde', atividade: 'Trilha do Morro Dois Irmãos', tempo: '4h', custo: 40 },
+      { periodo: 'Noite', atividade: 'Jantar em Ipanema', tempo: '3h', custo: 180 },
+    ]},
+    { titulo: 'Cultura carioca', periodos: [
+      { periodo: 'Manhã', atividade: 'Museu do Amanhã e Porto Maravilha', tempo: '3h', custo: 80 },
+      { periodo: 'Tarde', atividade: 'Feira de São Cristóvão', tempo: '3h', custo: 90 },
+      { periodo: 'Noite', atividade: 'Despedida na orla', tempo: '—', custo: 350 },
+    ]},
+  ],
+  sp: [
+    { titulo: 'Centro e cultura', periodos: [
+      { periodo: 'Manhã', atividade: 'MASP e Avenida Paulista', tempo: '3h', custo: 60 },
+      { periodo: 'Tarde', atividade: 'Almoço no Mercado Municipal', tempo: '2h', custo: 80 },
+      { periodo: 'Noite', atividade: 'Teatro ou show na Paulista', tempo: '3h', custo: 150 },
+    ]},
+    { titulo: 'Gastronomia e bairros', periodos: [
+      { periodo: 'Manhã', atividade: 'Vila Madalena e Beco do Batman', tempo: '3h', custo: 40 },
+      { periodo: 'Tarde', atividade: 'Almoço em restaurante premiado', tempo: '2h', custo: 200 },
+      { periodo: 'Noite', atividade: 'Pinheiros e bares artesanais', tempo: '4h', custo: 120 },
+    ]},
+    { titulo: 'Parques e despedida', periodos: [
+      { periodo: 'Manhã', atividade: 'Parque Ibirapuera e museus', tempo: '3h', custo: 30 },
+      { periodo: 'Tarde', atividade: 'Liberdade e compras', tempo: '3h', custo: 70 },
+      { periodo: 'Noite', atividade: 'Retorno ao aeroporto', tempo: '—', custo: 250 },
+    ]},
+  ],
+}
 
 const PASSOS = [
   { num: '01', titulo: 'Escolha o destino', desc: 'Explore mais de 50 destinos brasileiros com filtros por estilo, clima e orçamento.' },
@@ -170,49 +318,6 @@ const PASSOS = [
   { num: '03', titulo: 'Receba o roteiro', desc: 'Obtenha sugestões dia a dia com atividades, horários e tempo estimado.' },
   { num: '04', titulo: 'Ajuste o orçamento', desc: 'Visualize e ajuste custos de hospedagem, transporte, refeições e passeios.' },
 ]
-
-const ROTEIRO_DIAS = [
-  {
-    id: 0,
-    label: 'Dia 1',
-    titulo: 'Chegada e centro',
-    periodos: [
-      { periodo: 'Manhã', atividade: 'Check-in e café colonial', tempo: '2h', custo: 'R$ 80' },
-      { periodo: 'Tarde', atividade: 'Passeio pela Rua Coberta e Mini Mundo', tempo: '4h', custo: 'R$ 120' },
-      { periodo: 'Noite', atividade: 'Jantar romântico e Lago Negro iluminado', tempo: '3h', custo: 'R$ 180' },
-    ],
-  },
-  {
-    id: 1,
-    label: 'Dia 2',
-    titulo: 'Natureza e chocolate',
-    periodos: [
-      { periodo: 'Manhã', atividade: 'Carros de alegria até a Cascata do Caracol', tempo: '3h', custo: 'R$ 95' },
-      { periodo: 'Tarde', atividade: 'Almoço na serra e fábrica de chocolate', tempo: '4h', custo: 'R$ 150' },
-      { periodo: 'Noite', atividade: 'Jantar especial e passeio noturno', tempo: '2h', custo: 'R$ 200' },
-    ],
-  },
-  {
-    id: 2,
-    label: 'Dia 3',
-    titulo: 'Despedida',
-    periodos: [
-      { periodo: 'Manhã', atividade: 'Café da manhã e compras de souvenirs', tempo: '2h', custo: 'R$ 90' },
-      { periodo: 'Tarde', atividade: 'Último passeio pelo centro histórico', tempo: '3h', custo: 'R$ 60' },
-      { periodo: 'Noite', atividade: 'Retorno com memórias incríveis', tempo: '—', custo: 'R$ 350' },
-    ],
-  },
-]
-
-const ORCAMENTO = [
-  { categoria: 'Hospedagem', valor: 900, pct: 44 },
-  { categoria: 'Transporte', valor: 350, pct: 17 },
-  { categoria: 'Alimentação', valor: 480, pct: 23 },
-  { categoria: 'Passeios', valor: 320, pct: 16 },
-  { categoria: 'Reserva extra', valor: 0, pct: 0, reserva: true },
-]
-
-const TOTAL_ORCAMENTO = 2050
 
 const DIFERENCIAIS = [
   { icon: IconRoute, titulo: 'Roteiros personalizados', desc: 'Sugestões adaptadas ao seu estilo, tempo e preferências de viagem.' },
@@ -223,43 +328,88 @@ const DIFERENCIAIS = [
   { icon: IconCompass, titulo: 'Comparação de estilos', desc: 'Veja como muda o roteiro entre econômico, família ou luxo.' },
 ]
 
-const ESTILOS = ['Econômica', 'Família', 'Casal', 'Aventura', 'Luxo']
+/* ── Helpers ── */
+function getDestino(idOrNome) {
+  return DESTINOS.find((d) => d.id === idOrNome || d.nome === idOrNome) ?? DESTINOS[0]
+}
 
-const ORCAMENTO_OPCOES = [
-  { value: '1500', label: 'Até R$ 1.500' },
-  { value: '3000', label: 'R$ 1.500 – R$ 3.000' },
-  { value: '6000', label: 'R$ 3.000 – R$ 6.000' },
-  { value: '6000+', label: 'Acima de R$ 6.000' },
-]
+function calcularOrcamento(destinoId, dias, estilo) {
+  const destino = getDestino(destinoId)
+  const diasNum = Math.max(1, Math.min(30, parseInt(dias, 10) || 3))
+  const mult = ESTILO_MULTIPLIER[estilo] ?? 1
+  const fatorDias = diasNum / 3
+
+  const base = destino.precoBase * mult
+  const hospedagem = Math.round(base * 0.44 * fatorDias)
+  const transporte = Math.round(base * 0.17)
+  const alimentacao = Math.round(base * 0.23 * fatorDias)
+  const passeios = Math.round(base * 0.16 * fatorDias)
+  const subtotal = hospedagem + transporte + alimentacao + passeios
+  const reserva = Math.round(subtotal * 0.1)
+  const total = subtotal + reserva
+
+  const pct = (v) => Math.round((v / total) * 100)
+
+  return {
+    categorias: [
+      { categoria: 'Hospedagem', valor: hospedagem, pct: pct(hospedagem) },
+      { categoria: 'Transporte', valor: transporte, pct: pct(transporte) },
+      { categoria: 'Alimentação', valor: alimentacao, pct: pct(alimentacao) },
+      { categoria: 'Passeios', valor: passeios, pct: pct(passeios) },
+    ],
+    reserva,
+    total,
+    dias: diasNum,
+  }
+}
+
+function getRoteiroDias(destinoId, dias, estilo) {
+  const template = ROTEIROS_POR_DESTINO[destinoId] ?? ROTEIROS_POR_DESTINO.gramado
+  const diasNum = Math.max(1, Math.min(template.length, parseInt(dias, 10) || 3))
+  const mult = (ESTILO_MULTIPLIER[estilo] ?? 1) / ESTILO_MULTIPLIER.Casal
+
+  return template.slice(0, diasNum).map((dia, i) => ({
+    id: i,
+    label: `Dia ${i + 1}`,
+    titulo: dia.titulo,
+    periodos: dia.periodos.map((p) => ({
+      ...p,
+      custo: formatBRL(Math.round(p.custo * mult)),
+    })),
+  }))
+}
 
 /* ── Sub-components ── */
 function Logo({ onClick }) {
   return (
-    <a href="#" className="logo" onClick={onClick}>
-      <span className="logo__mark">
-        <IconRoute size={18} />
-      </span>
+    <button type="button" className="logo" onClick={onClick} aria-label="MeuRoteiro — ir para o início">
+      <span className="logo__mark"><IconRoute size={18} /></span>
       <span className="logo__name">MeuRoteiro</span>
-    </a>
+    </button>
   )
 }
 
-function Header({ menuOpen, setMenuOpen }) {
-  const closeMenu = () => setMenuOpen(false)
-
+function Header({ menuOpen, setMenuOpen, onNav, onCriarRoteiro }) {
   return (
     <header className="header">
       <div className="container header__inner">
-        <Logo onClick={closeMenu} />
-        <nav className={`nav ${menuOpen ? 'nav--open' : ''}`}>
+        <Logo onClick={() => { setMenuOpen(false); onNav('inicio') }} />
+        <nav className={`nav ${menuOpen ? 'nav--open' : ''}`} aria-label="Menu principal">
           {NAV_LINKS.map((link) => (
-            <a key={link.href} href={link.href} onClick={closeMenu}>{link.label}</a>
+            <button
+              key={link.id}
+              type="button"
+              className="nav__link"
+              onClick={() => { setMenuOpen(false); onNav(link.id) }}
+            >
+              {link.label}
+            </button>
           ))}
-          <a href="#planejador" className="nav__cta-mobile btn btn--primary" onClick={closeMenu}>
+          <button type="button" className="nav__cta-mobile btn btn--primary" onClick={() => { setMenuOpen(false); onCriarRoteiro() }}>
             Criar roteiro
-          </a>
+          </button>
         </nav>
-        <button type="button" className="btn btn--primary btn--header" onClick={() => document.getElementById('planejador')?.scrollIntoView({ behavior: 'smooth' })}>
+        <button type="button" className="btn btn--primary btn--header" onClick={onCriarRoteiro}>
           Criar roteiro
         </button>
         <button
@@ -276,14 +426,18 @@ function Header({ menuOpen, setMenuOpen }) {
   )
 }
 
-function HeroPreviewCard() {
-  const miniDias = ['Chegada', 'Natureza', 'Despedida']
+function HeroPreviewCard({ destino, dias, estilo, orcamento }) {
+  const dest = getDestino(destino)
+  const orc = calcularOrcamento(dest.id, dias, estilo)
+  const diasTemplate = ROTEIROS_POR_DESTINO[dest.id] ?? ROTEIROS_POR_DESTINO.gramado
+  const miniDias = diasTemplate.slice(0, Math.min(parseInt(dias, 10) || 3, 3)).map((d) => d.titulo.split(' ')[0])
+
   return (
     <div className="hero-preview glass">
       <div className="hero-preview__header">
         <div>
-          <span className="hero-preview__destino">Gramado</span>
-          <span className="hero-preview__meta">3 dias · Casal · R$ 2.050</span>
+          <span className="hero-preview__destino">{dest.nome}</span>
+          <span className="hero-preview__meta">{dias} dias · {estilo} · {formatBRL(orcamento.total)}</span>
         </div>
         <span className="hero-preview__badge">Roteiro pronto</span>
       </div>
@@ -297,97 +451,19 @@ function HeroPreviewCard() {
       </div>
       <div className="hero-preview__costs">
         <div className="hero-preview__cost-row">
-          <span>Hospedagem</span><strong>R$ 900</strong>
+          <span>Hospedagem</span>
+          <strong>{formatBRL(orcamento.categorias[0].valor)}</strong>
         </div>
         <div className="hero-preview__cost-row">
-          <span>Passeios + refeições</span><strong>R$ 800</strong>
+          <span>Passeios + refeições</span>
+          <strong>{formatBRL(orcamento.categorias[2].valor + orcamento.categorias[3].valor)}</strong>
         </div>
         <div className="hero-preview__cost-row hero-preview__cost-row--total">
-          <span>Total estimado</span><strong>R$ 2.050</strong>
+          <span>Total estimado</span>
+          <strong>{formatBRL(orcamento.total)}</strong>
         </div>
       </div>
     </div>
-  )
-}
-
-function PlannerForm({ form, setForm, onSubmit, sugestao }) {
-  return (
-    <section id="planejador" className="planner">
-      <div className="container">
-        <div className="planner__card glass">
-          <div className="planner__header">
-            <span className="eyebrow">Planejador inteligente</span>
-            <h2>Monte sua viagem em segundos</h2>
-            <p>Preencha os campos e receba uma sugestão personalizada de roteiro.</p>
-          </div>
-          <form className="planner__form" onSubmit={onSubmit}>
-            <div className="field">
-              <label htmlFor="destino">Destino</label>
-              <select
-                id="destino"
-                value={form.destino}
-                onChange={(e) => setForm({ ...form, destino: e.target.value })}
-              >
-                <option value="">Para onde você quer ir?</option>
-                {DESTINOS.map((d) => (
-                  <option key={d.id} value={d.nome}>{d.nome}</option>
-                ))}
-              </select>
-            </div>
-            <div className="field">
-              <label htmlFor="dias">Quantidade de dias</label>
-              <input
-                id="dias"
-                type="number"
-                min="1"
-                max="30"
-                value={form.dias}
-                onChange={(e) => setForm({ ...form, dias: e.target.value })}
-              />
-            </div>
-            <div className="field">
-              <label htmlFor="estilo">Estilo da viagem</label>
-              <select
-                id="estilo"
-                value={form.estilo}
-                onChange={(e) => setForm({ ...form, estilo: e.target.value })}
-              >
-                {ESTILOS.map((e) => (
-                  <option key={e} value={e}>{e}</option>
-                ))}
-              </select>
-            </div>
-            <div className="field">
-              <label htmlFor="orcamento">Orçamento aproximado</label>
-              <select
-                id="orcamento"
-                value={form.orcamento}
-                onChange={(e) => setForm({ ...form, orcamento: e.target.value })}
-              >
-                {ORCAMENTO_OPCOES.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-              </select>
-            </div>
-            <button type="submit" className="btn btn--primary btn--lg planner__submit">
-              Gerar roteiro
-            </button>
-          </form>
-          {sugestao && (
-            <div className="planner__result" role="status">
-              <span className="planner__result-icon"><IconCheck size={18} /></span>
-              <div>
-                <strong>Roteiro sugerido para {sugestao.destino}</strong>
-                <p>
-                  {sugestao.dias} dias · Estilo {sugestao.estilo} · Orçamento {sugestao.orcamentoLabel}
-                  {' '}— estimativa de <strong>{sugestao.precoEstimado}</strong> para 2 pessoas.
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    </section>
   )
 }
 
@@ -395,36 +471,126 @@ function PlannerForm({ form, setForm, onSubmit, sugestao }) {
 function App() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [diaAtivo, setDiaAtivo] = useState(0)
+  const [formError, setFormError] = useState('')
+  const [sugestaoVisivel, setSugestaoVisivel] = useState(false)
+  const [favoritos, setFavoritos] = useState(() => {
+    try {
+      const saved = localStorage.getItem(FAVORITOS_KEY)
+      return saved ? JSON.parse(saved) : []
+    } catch {
+      return []
+    }
+  })
+
   const [form, setForm] = useState({
     destino: '',
     dias: '3',
     estilo: 'Casal',
     orcamento: '3000',
   })
-  const [sugestao, setSugestao] = useState(null)
+
+  const [viagem, setViagem] = useState({
+    destinoId: 'gramado',
+    dias: '3',
+    estilo: 'Casal',
+    gerado: false,
+  })
+
+  useEffect(() => {
+    localStorage.setItem(FAVORITOS_KEY, JSON.stringify(favoritos))
+  }, [favoritos])
+
+  const destinoAtual = getDestino(viagem.destinoId)
+  const orcamento = useMemo(
+    () => calcularOrcamento(viagem.destinoId, viagem.dias, viagem.estilo),
+    [viagem.destinoId, viagem.dias, viagem.estilo],
+  )
+
+  const roteiroDias = useMemo(() => {
+    const dias = getRoteiroDias(viagem.destinoId, viagem.dias)
+    return dias.map((dia) => ({
+      ...dia,
+      periodos: aplicarEstiloCustos(
+        ROTEIROS_POR_DESTINO[viagem.destinoId]?.[dia.id]?.periodos ?? dia.periodos,
+        viagem.estilo,
+      ).map((p) => ({
+        ...p,
+        custo: formatBRL(Math.round((ROTEIROS_POR_DESTINO[viagem.destinoId]?.[dia.id]?.periodos
+          .find((x) => x.periodo === p.periodo)?.custo ?? 0) * ((ESTILO_MULTIPLIER[viagem.estilo] ?? 1) / ESTILO_MULTIPLIER.Casal)),
+      )),
+    }))
+  }, [viagem.destinoId, viagem.dias, viagem.estilo])
+
+  const diaSelecionado = roteiroDias[diaAtivo] ?? roteiroDias[0]
+
+  useEffect(() => {
+    if (diaAtivo >= roteiroDias.length) setDiaAtivo(0)
+  }, [roteiroDias.length, diaAtivo])
+
+  const irPlanejador = useCallback(() => {
+    scrollToSection('planejador', { focus: 'destino' })
+  }, [])
+
+  const aplicarDestino = useCallback((destinoId, opts = {}) => {
+    const dest = getDestino(destinoId)
+    setForm((f) => ({ ...f, destino: dest.nome }))
+    setViagem((v) => ({
+      destinoId: dest.id,
+      dias: opts.dias ?? v.dias,
+      estilo: opts.estilo ?? v.estilo,
+      gerado: true,
+    }))
+    setDiaAtivo(0)
+    setFormError('')
+    if (opts.scroll !== false) {
+      setTimeout(() => scrollToSection('roteiros'), 100)
+    }
+  }, [])
 
   const handleGerarRoteiro = (e) => {
     e.preventDefault()
-    const destinoData = DESTINOS.find((d) => d.nome === form.destino)
-    const orcLabel = ORCAMENTO_OPCOES.find((o) => o.value === form.orcamento)?.label ?? ''
-    setSugestao({
-      destino: form.destino || 'Gramado',
+    if (!form.destino) {
+      setFormError('Selecione um destino para gerar seu roteiro personalizado.')
+      scrollToSection('planejador')
+      setTimeout(() => document.getElementById('destino')?.focus(), 450)
+      return
+    }
+    const dest = getDestino(form.destino)
+    setFormError('')
+    setViagem({
+      destinoId: dest.id,
       dias: form.dias,
       estilo: form.estilo,
-      orcamentoLabel: orcLabel,
-      precoEstimado: destinoData?.preco ?? 'R$ 2.050',
+      gerado: true,
     })
+    setDiaAtivo(0)
+    setSugestaoVisivel(true)
+    setTimeout(() => scrollToSection('roteiros'), 150)
   }
 
-  const diaSelecionado = ROTEIRO_DIAS[diaAtivo]
+  const toggleFavorito = (destinoId, e) => {
+    e?.stopPropagation()
+    setFavoritos((prev) =>
+      prev.includes(destinoId)
+        ? prev.filter((id) => id !== destinoId)
+        : [...prev, destinoId],
+    )
+  }
+
+  const destinosFavoritos = DESTINOS.filter((d) => favoritos.includes(d.id))
 
   return (
     <div className="app">
-      <Header menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
+      <Header
+        menuOpen={menuOpen}
+        setMenuOpen={setMenuOpen}
+        onNav={scrollToSection}
+        onCriarRoteiro={irPlanejador}
+      />
 
       <main>
         {/* Hero */}
-        <section className="hero">
+        <section id="inicio" className="hero section-anchor">
           <div className="hero__bg" aria-hidden="true">
             <div className="hero__orb hero__orb--1" />
             <div className="hero__orb hero__orb--2" />
@@ -439,10 +605,12 @@ function App() {
                 os custos da sua próxima viagem em um só lugar.
               </p>
               <div className="hero__actions">
-                <button type="button" className="btn btn--primary btn--lg" onClick={() => document.getElementById('planejador')?.scrollIntoView({ behavior: 'smooth' })}>
+                <button type="button" className="btn btn--primary btn--lg" onClick={irPlanejador}>
                   Criar meu roteiro
                 </button>
-                <a href="#destinos" className="btn btn--ghost btn--lg">Explorar destinos</a>
+                <button type="button" className="btn btn--ghost btn--lg" onClick={() => scrollToSection('destinos')}>
+                  Explorar destinos
+                </button>
               </div>
               <div className="hero__trust">
                 <span><IconCheck size={14} /> Sem cadastro necessário</span>
@@ -450,23 +618,115 @@ function App() {
               </div>
             </div>
             <div className="hero__visual">
-              <HeroPreviewCard />
+              <HeroPreviewCard
+                destino={viagem.destinoId}
+                dias={viagem.dias}
+                estilo={viagem.estilo}
+                orcamento={orcamento}
+              />
               <div className="hero__float hero__float--1 glass">
                 <IconMap size={16} />
-                <span>12 atividades sugeridas</span>
+                <span>{roteiroDias.length * 3} atividades sugeridas</span>
               </div>
               <div className="hero__float hero__float--2 glass">
                 <IconWallet size={16} />
-                <span>Orçamento detalhado</span>
+                <span>{formatBRL(orcamento.total)} estimados</span>
               </div>
             </div>
           </div>
         </section>
 
-        <PlannerForm form={form} setForm={setForm} onSubmit={handleGerarRoteiro} sugestao={sugestao} />
+        {/* Planejador */}
+        <section id="planejador" className="planner section-anchor">
+          <div className="container">
+            <div className="planner__card glass">
+              <div className="planner__header">
+                <span className="eyebrow">Planejador inteligente</span>
+                <h2>Monte sua viagem em segundos</h2>
+                <p>Preencha os campos e receba uma sugestão personalizada de roteiro.</p>
+              </div>
+              <form className="planner__form" onSubmit={handleGerarRoteiro} noValidate>
+                <div className={`field ${formError ? 'field--error' : ''}`}>
+                  <label htmlFor="destino">Destino</label>
+                  <select
+                    id="destino"
+                    value={form.destino}
+                    aria-invalid={!!formError}
+                    aria-describedby={formError ? 'destino-erro' : undefined}
+                    onChange={(e) => { setForm({ ...form, destino: e.target.value }); setFormError('') }}
+                  >
+                    <option value="">Para onde você quer ir?</option>
+                    {DESTINOS.map((d) => (
+                      <option key={d.id} value={d.nome}>{d.nome}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="field">
+                  <label htmlFor="dias">Quantidade de dias</label>
+                  <input
+                    id="dias"
+                    type="number"
+                    min="1"
+                    max="30"
+                    value={form.dias}
+                    onChange={(e) => setForm({ ...form, dias: e.target.value })}
+                  />
+                </div>
+                <div className="field">
+                  <label htmlFor="estilo">Estilo da viagem</label>
+                  <select
+                    id="estilo"
+                    value={form.estilo}
+                    onChange={(e) => setForm({ ...form, estilo: e.target.value })}
+                  >
+                    {ESTILOS.map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="field">
+                  <label htmlFor="orcamento">Orçamento aproximado</label>
+                  <select
+                    id="orcamento"
+                    value={form.orcamento}
+                    onChange={(e) => setForm({ ...form, orcamento: e.target.value })}
+                  >
+                    {ORCAMENTO_OPCOES.map((o) => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <button type="submit" className="btn btn--primary btn--lg planner__submit">
+                  Gerar roteiro
+                </button>
+              </form>
+
+              {formError && (
+                <div className="planner__alert" id="destino-erro" role="alert">
+                  <IconAlert size={18} />
+                  <span>{formError}</span>
+                </div>
+              )}
+
+              {sugestaoVisivel && viagem.gerado && !formError && (
+                <div className="planner__result" role="status">
+                  <span className="planner__result-icon"><IconCheck size={18} /></span>
+                  <div>
+                    <strong>Roteiro sugerido para {destinoAtual.nome}</strong>
+                    <p>
+                      {viagem.dias} dias · Estilo {viagem.estilo} ·{' '}
+                      {ORCAMENTO_OPCOES.find((o) => o.value === form.orcamento)?.label} —{' '}
+                      estimativa de <strong>{formatBRL(orcamento.total)}</strong> para 2 pessoas.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
 
         {/* Métricas */}
-        <section className="metricas">
+        <section className="metricas" aria-label="Indicadores">
           <div className="container metricas__grid">
             {METRICAS.map((m) => (
               <article key={m.label} className="metrica">
@@ -479,41 +739,59 @@ function App() {
         </section>
 
         {/* Destinos */}
-        <section id="destinos" className="section">
+        <section id="destinos" className="section section-anchor">
           <div className="container">
             <div className="section__head">
               <span className="eyebrow">Destinos em destaque</span>
               <h2>Explore os lugares mais desejados do Brasil</h2>
-              <p>Cards com estimativas reais de preço e tempo ideal para cada destino.</p>
+              <p>Clique em &ldquo;Ver roteiro&rdquo; ou salve nos favoritos para planejar depois.</p>
             </div>
             <div className="destinos-grid">
-              {DESTINOS.map((d) => (
-                <article key={d.id} className="dest-card">
-                  <div className={`dest-card__visual ${d.gradient}`}>
-                    <div className="dest-card__overlay" />
-                  </div>
-                  <div className="dest-card__body">
-                    <div className="dest-card__tags">
-                      {d.tags.map((t) => (
-                        <span key={t} className="tag">{t}</span>
-                      ))}
+              {DESTINOS.map((d) => {
+                const isFav = favoritos.includes(d.id)
+                return (
+                  <article key={d.id} className="dest-card">
+                    <div className={`dest-card__visual ${d.gradient}`}>
+                      <div className="dest-card__overlay" />
+                      <button
+                        type="button"
+                        className={`dest-card__fav ${isFav ? 'dest-card__fav--active' : ''}`}
+                        aria-label={isFav ? `Remover ${d.nome} dos favoritos` : `Salvar ${d.nome} nos favoritos`}
+                        aria-pressed={isFav}
+                        onClick={(e) => toggleFavorito(d.id, e)}
+                      >
+                        <IconHeart size={18} filled={isFav} />
+                      </button>
                     </div>
-                    <h3>{d.nome}</h3>
-                    <p>{d.descricao}</p>
-                    <div className="dest-card__meta">
-                      <span><IconWallet size={14} /> {d.preco} / pessoa</span>
-                      <span><IconClock size={14} /> {d.tempo}</span>
+                    <div className="dest-card__body">
+                      <div className="dest-card__tags">
+                        {d.tags.map((t) => (
+                          <span key={t} className="tag">{t}</span>
+                        ))}
+                      </div>
+                      <h3>{d.nome}</h3>
+                      <p>{d.descricao}</p>
+                      <div className="dest-card__meta">
+                        <span><IconWallet size={14} /> {formatBRL(d.precoBase)} / pessoa</span>
+                        <span><IconClock size={14} /> {d.tempo}</span>
+                      </div>
+                      <button
+                        type="button"
+                        className="btn btn--outline btn--sm"
+                        onClick={() => aplicarDestino(d.id, { dias: form.dias, estilo: form.estilo })}
+                      >
+                        Ver roteiro
+                      </button>
                     </div>
-                    <button type="button" className="btn btn--outline btn--sm">Ver roteiro</button>
-                  </div>
-                </article>
-              ))}
+                  </article>
+                )
+              })}
             </div>
           </div>
         </section>
 
         {/* Como funciona */}
-        <section id="como-funciona" className="section section--muted">
+        <section id="como-funciona" className="section section--muted section-anchor">
           <div className="container">
             <div className="section__head">
               <span className="eyebrow">Como funciona</span>
@@ -533,22 +811,29 @@ function App() {
           </div>
         </section>
 
-        {/* Roteiro exemplo */}
-        <section id="roteiro" className="section">
+        {/* Roteiro sugerido */}
+        <section id="roteiros" className="section section-anchor">
           <div className="container">
             <div className="section__head section__head--left">
-              <span className="eyebrow">Exemplo premium</span>
-              <h2>Roteiro de Gramado · 3 dias</h2>
-              <p>Roteiro romântico pela Serra Gaúcha com atividades detalhadas por período.</p>
+              <span className="eyebrow">{viagem.gerado ? 'Roteiro sugerido' : 'Exemplo premium'}</span>
+              <h2>
+                {destinoAtual.nome} · {viagem.dias} {parseInt(viagem.dias, 10) === 1 ? 'dia' : 'dias'}
+              </h2>
+              <p>
+                Roteiro {viagem.estilo.toLowerCase()} com atividades detalhadas por período
+                {viagem.gerado ? ' — gerado para você.' : ' — exemplo para inspiração.'}
+              </p>
             </div>
             <div className="roteiro-premium glass">
-              <div className="roteiro-premium__tabs" role="tablist">
-                {ROTEIRO_DIAS.map((dia) => (
+              <div className="roteiro-premium__tabs" role="tablist" aria-label="Dias do roteiro">
+                {roteiroDias.map((dia) => (
                   <button
                     key={dia.id}
                     type="button"
                     role="tab"
+                    id={`tab-dia-${dia.id}`}
                     aria-selected={diaAtivo === dia.id}
+                    aria-controls={`panel-dia-${dia.id}`}
                     className={`roteiro-premium__tab ${diaAtivo === dia.id ? 'roteiro-premium__tab--active' : ''}`}
                     onClick={() => setDiaAtivo(dia.id)}
                   >
@@ -557,10 +842,15 @@ function App() {
                   </button>
                 ))}
               </div>
-              <div className="roteiro-premium__content" role="tabpanel">
-                <h3>{diaSelecionado.titulo}</h3>
+              <div
+                className="roteiro-premium__content"
+                role="tabpanel"
+                id={`panel-dia-${diaSelecionado?.id}`}
+                aria-labelledby={`tab-dia-${diaSelecionado?.id}`}
+              >
+                <h3>{diaSelecionado?.titulo}</h3>
                 <div className="periodos">
-                  {diaSelecionado.periodos.map((p) => (
+                  {diaSelecionado?.periodos.map((p) => (
                     <article key={p.periodo} className="periodo">
                       <span className="periodo__label">{p.periodo}</span>
                       <div className="periodo__info">
@@ -579,21 +869,23 @@ function App() {
         </section>
 
         {/* Orçamento */}
-        <section id="orcamento" className="section section--muted">
+        <section id="orcamento" className="section section--muted section-anchor">
           <div className="container">
             <div className="orcamento-layout">
               <div className="section__head section__head--left">
                 <span className="eyebrow">Orçamento visual</span>
                 <h2>Estimativa de custos</h2>
-                <p>Valores aproximados para 2 pessoas, viagem de 3 dias a Gramado.</p>
+                <p>
+                  Valores para 2 pessoas · {orcamento.dias} dias em {destinoAtual.nome} · estilo {viagem.estilo}.
+                </p>
               </div>
               <div className="orcamento-panel glass">
                 <ul className="orcamento-bars">
-                  {ORCAMENTO.filter((o) => !o.reserva).map((item) => (
+                  {orcamento.categorias.map((item) => (
                     <li key={item.categoria}>
                       <div className="orcamento-bars__head">
                         <span>{item.categoria}</span>
-                        <strong>R$ {item.valor.toLocaleString('pt-BR')}</strong>
+                        <strong>{formatBRL(item.valor)}</strong>
                       </div>
                       <div className="orcamento-bars__track">
                         <div className="orcamento-bars__fill" style={{ width: `${item.pct}%` }} />
@@ -604,22 +896,78 @@ function App() {
                 </ul>
                 <div className="orcamento-reserva">
                   <span>Reserva extra recomendada</span>
-                  <strong>+ R$ 200</strong>
+                  <strong>+ {formatBRL(orcamento.reserva)}</strong>
                 </div>
                 <div className="orcamento-total">
                   <div>
                     <span>Total estimado</span>
-                    <small>Para 2 pessoas · 3 dias</small>
+                    <small>Para 2 pessoas · {orcamento.dias} dias · {destinoAtual.nome}</small>
                   </div>
-                  <strong>R$ {TOTAL_ORCAMENTO.toLocaleString('pt-BR')}</strong>
+                  <strong>{formatBRL(orcamento.total)}</strong>
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Diferencial */}
-        <section id="favoritos" className="section">
+        {/* Favoritos */}
+        <section id="favoritos" className="section section-anchor">
+          <div className="container">
+            <div className="section__head">
+              <span className="eyebrow">Seus favoritos</span>
+              <h2>Destinos salvos</h2>
+              <p>
+                {favoritos.length > 0
+                  ? `${favoritos.length} destino${favoritos.length > 1 ? 's' : ''} salvo${favoritos.length > 1 ? 's' : ''} para planejar depois.`
+                  : 'Salve destinos clicando no coração dos cards acima.'}
+              </p>
+            </div>
+
+            {destinosFavoritos.length === 0 ? (
+              <div className="favoritos-empty glass">
+                <span className="favoritos-empty__icon" aria-hidden="true"><IconHeart size={32} /></span>
+                <p>
+                  Você ainda não salvou nenhum destino. Clique no coração dos cards para salvar seus lugares preferidos.
+                </p>
+                <button type="button" className="btn btn--outline" onClick={() => scrollToSection('destinos')}>
+                  Explorar destinos
+                </button>
+              </div>
+            ) : (
+              <div className="favoritos-grid">
+                {destinosFavoritos.map((d) => (
+                  <article key={d.id} className="fav-card">
+                    <div className={`fav-card__visual ${d.gradient}`} />
+                    <div className="fav-card__body">
+                      <h3>{d.nome}</h3>
+                      <p>{d.descricao}</p>
+                      <div className="fav-card__actions">
+                        <button
+                          type="button"
+                          className="btn btn--outline btn--sm"
+                          onClick={() => aplicarDestino(d.id)}
+                        >
+                          Ver roteiro
+                        </button>
+                        <button
+                          type="button"
+                          className="fav-card__remove"
+                          aria-label={`Remover ${d.nome} dos favoritos`}
+                          onClick={() => toggleFavorito(d.id)}
+                        >
+                          <IconHeart size={16} filled />
+                        </button>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* Diferenciais */}
+        <section className="section section--muted">
           <div className="container">
             <div className="section__head">
               <span className="eyebrow">Por que MeuRoteiro</span>
@@ -644,7 +992,7 @@ function App() {
             <div className="cta-final__card">
               <h2>Pronto para montar sua próxima viagem?</h2>
               <p>Comece escolhendo um destino e receba uma sugestão de roteiro em poucos segundos.</p>
-              <button type="button" className="btn btn--white btn--lg" onClick={() => document.getElementById('planejador')?.scrollIntoView({ behavior: 'smooth' })}>
+              <button type="button" className="btn btn--white btn--lg" onClick={irPlanejador}>
                 Criar meu roteiro agora
               </button>
             </div>
@@ -655,14 +1003,14 @@ function App() {
       <footer className="footer">
         <div className="container footer__inner">
           <div className="footer__brand">
-            <Logo />
+            <Logo onClick={() => scrollToSection('inicio')} />
             <p>Viaje melhor, planeje com facilidade.</p>
           </div>
-          <nav className="footer__nav">
-            <a href="#destinos">Destinos</a>
-            <a href="#roteiro">Roteiros</a>
-            <a href="#orcamento">Orçamento</a>
-            <a href="#contato">Contato</a>
+          <nav className="footer__nav" aria-label="Links do rodapé">
+            <button type="button" className="footer__link" onClick={() => scrollToSection('destinos')}>Destinos</button>
+            <button type="button" className="footer__link" onClick={() => scrollToSection('roteiros')}>Roteiros</button>
+            <button type="button" className="footer__link" onClick={() => scrollToSection('orcamento')}>Orçamento</button>
+            <button type="button" className="footer__link" onClick={() => scrollToSection('favoritos')}>Favoritos</button>
           </nav>
           <p className="footer__copy">&copy; {new Date().getFullYear()} MeuRoteiro. Todos os direitos reservados.</p>
         </div>
