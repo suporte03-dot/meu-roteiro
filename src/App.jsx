@@ -37,6 +37,31 @@ function IconRoute({ size = 20 }) {
   )
 }
 
+function LogoMark({ size = 40 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 40 40" fill="none" aria-hidden="true">
+      <defs>
+        <linearGradient id="logo-bg" x1="4" y1="2" x2="36" y2="38" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#0d9488" />
+          <stop offset="1" stopColor="#0369a1" />
+        </linearGradient>
+        <linearGradient id="logo-pin" x1="14" y1="8" x2="28" y2="30" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#ffffff" />
+          <stop offset="1" stopColor="#ccfbf1" />
+        </linearGradient>
+      </defs>
+      <rect width="40" height="40" rx="11" fill="url(#logo-bg)" />
+      <path d="M8 28c0-6.5 5.5-12 12-12s12 5.5 12 12" stroke="#fff" strokeOpacity="0.25" strokeWidth="1.5" strokeLinecap="round" />
+      <circle cx="12" cy="26" r="2.5" fill="#fff" fillOpacity="0.9" />
+      <circle cx="20" cy="22" r="2.5" fill="#fff" fillOpacity="0.75" />
+      <circle cx="28" cy="26" r="2.5" fill="#fff" fillOpacity="0.9" />
+      <path d="M12 26h8l8-4" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M20 10c-3.3 0-6 2.7-6 6 0 4.5 6 10 6 10s6-5.5 6-10c0-3.3-2.7-6-6-6Z" fill="url(#logo-pin)" />
+      <circle cx="20" cy="16" r="2.2" fill="#0d9488" />
+    </svg>
+  )
+}
+
 function IconCalendar({ size = 20 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -159,6 +184,7 @@ const DESTINOS = [
     precoBase: 1800,
     tempo: '3–4 dias',
     gradient: 'grad-gramado',
+    imagem: '/images/destinos/gramado.jpg',
   },
   {
     id: 'florianopolis',
@@ -168,6 +194,7 @@ const DESTINOS = [
     precoBase: 2200,
     tempo: '4–5 dias',
     gradient: 'grad-floripa',
+    imagem: '/images/destinos/florianopolis.jpg',
   },
   {
     id: 'bc',
@@ -177,6 +204,7 @@ const DESTINOS = [
     precoBase: 2500,
     tempo: '3–5 dias',
     gradient: 'grad-bc',
+    imagem: '/images/destinos/bc.jpg',
   },
   {
     id: 'foz',
@@ -186,6 +214,7 @@ const DESTINOS = [
     precoBase: 2800,
     tempo: '3–4 dias',
     gradient: 'grad-foz',
+    imagem: '/images/destinos/foz.jpg',
   },
   {
     id: 'rio',
@@ -195,6 +224,7 @@ const DESTINOS = [
     precoBase: 2400,
     tempo: '4–6 dias',
     gradient: 'grad-rio',
+    imagem: '/images/destinos/rio.jpg',
   },
   {
     id: 'sp',
@@ -204,6 +234,7 @@ const DESTINOS = [
     precoBase: 1600,
     tempo: '3–5 dias',
     gradient: 'grad-sp',
+    imagem: '/images/destinos/sp.jpg',
   },
 ]
 
@@ -383,9 +414,26 @@ function getRoteiroDias(destinoId, dias, estilo) {
 function Logo({ onClick }) {
   return (
     <button type="button" className="logo" onClick={onClick} aria-label="MeuRoteiro — ir para o início">
-      <span className="logo__mark"><IconRoute size={18} /></span>
-      <span className="logo__name">MeuRoteiro</span>
+      <span className="logo__mark"><LogoMark size={40} /></span>
+      <span className="logo__name">
+        Meu<span className="logo__accent">Roteiro</span>
+      </span>
     </button>
+  )
+}
+
+function DestinoImagem({ destino, className = 'dest-card__visual', children }) {
+  return (
+    <div className={className}>
+      <img
+        src={destino.imagem}
+        alt={`Paisagem de ${destino.nome}`}
+        loading="lazy"
+        className="destino-img"
+      />
+      <div className="dest-card__overlay" aria-hidden="true" />
+      {children}
+    </div>
   )
 }
 
@@ -428,12 +476,14 @@ function Header({ menuOpen, setMenuOpen, onNav, onCriarRoteiro }) {
 
 function HeroPreviewCard({ destino, dias, estilo, orcamento }) {
   const dest = getDestino(destino)
-  const orc = calcularOrcamento(dest.id, dias, estilo)
   const diasTemplate = ROTEIROS_POR_DESTINO[dest.id] ?? ROTEIROS_POR_DESTINO.gramado
   const miniDias = diasTemplate.slice(0, Math.min(parseInt(dias, 10) || 3, 3)).map((d) => d.titulo.split(' ')[0])
 
   return (
     <div className="hero-preview glass">
+      <div className="hero-preview__thumb">
+        <img src={dest.imagem} alt="" aria-hidden="true" loading="eager" />
+      </div>
       <div className="hero-preview__header">
         <div>
           <span className="hero-preview__destino">{dest.nome}</span>
@@ -746,8 +796,7 @@ function App() {
                 const isFav = favoritos.includes(d.id)
                 return (
                   <article key={d.id} className="dest-card">
-                    <div className={`dest-card__visual ${d.gradient}`}>
-                      <div className="dest-card__overlay" />
+                    <DestinoImagem destino={d}>
                       <button
                         type="button"
                         className={`dest-card__fav ${isFav ? 'dest-card__fav--active' : ''}`}
@@ -757,7 +806,7 @@ function App() {
                       >
                         <IconHeart size={18} filled={isFav} />
                       </button>
-                    </div>
+                    </DestinoImagem>
                     <div className="dest-card__body">
                       <div className="dest-card__tags">
                         {d.tags.map((t) => (
@@ -932,7 +981,7 @@ function App() {
               <div className="favoritos-grid">
                 {destinosFavoritos.map((d) => (
                   <article key={d.id} className="fav-card">
-                    <div className={`fav-card__visual ${d.gradient}`} />
+                    <img src={d.imagem} alt={d.nome} className="fav-card__visual" loading="lazy" />
                     <div className="fav-card__body">
                       <h3>{d.nome}</h3>
                       <p>{d.descricao}</p>
