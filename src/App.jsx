@@ -506,20 +506,10 @@ function App() {
     [viagem.destinoId, viagem.dias, viagem.estilo],
   )
 
-  const roteiroDias = useMemo(() => {
-    const dias = getRoteiroDias(viagem.destinoId, viagem.dias)
-    return dias.map((dia) => ({
-      ...dia,
-      periodos: aplicarEstiloCustos(
-        ROTEIROS_POR_DESTINO[viagem.destinoId]?.[dia.id]?.periodos ?? dia.periodos,
-        viagem.estilo,
-      ).map((p) => ({
-        ...p,
-        custo: formatBRL(Math.round((ROTEIROS_POR_DESTINO[viagem.destinoId]?.[dia.id]?.periodos
-          .find((x) => x.periodo === p.periodo)?.custo ?? 0) * ((ESTILO_MULTIPLIER[viagem.estilo] ?? 1) / ESTILO_MULTIPLIER.Casal)),
-      )),
-    }))
-  }, [viagem.destinoId, viagem.dias, viagem.estilo])
+  const roteiroDias = useMemo(
+    () => getRoteiroDias(viagem.destinoId, viagem.dias, viagem.estilo),
+    [viagem.destinoId, viagem.dias, viagem.estilo],
+  )
 
   const diaSelecionado = roteiroDias[diaAtivo] ?? roteiroDias[0]
 
@@ -566,6 +556,11 @@ function App() {
     setDiaAtivo(0)
     setSugestaoVisivel(true)
     setTimeout(() => scrollToSection('roteiros'), 150)
+  }
+
+  const handleVerRoteiro = (destinoId) => {
+    aplicarDestino(destinoId, { dias: form.dias, estilo: form.estilo })
+    setSugestaoVisivel(true)
   }
 
   const toggleFavorito = (destinoId, e) => {
@@ -778,7 +773,7 @@ function App() {
                       <button
                         type="button"
                         className="btn btn--outline btn--sm"
-                        onClick={() => aplicarDestino(d.id, { dias: form.dias, estilo: form.estilo })}
+                        onClick={() => handleVerRoteiro(d.id)}
                       >
                         Ver roteiro
                       </button>
@@ -945,7 +940,7 @@ function App() {
                         <button
                           type="button"
                           className="btn btn--outline btn--sm"
-                          onClick={() => aplicarDestino(d.id)}
+                          onClick={() => handleVerRoteiro(d.id)}
                         >
                           Ver roteiro
                         </button>

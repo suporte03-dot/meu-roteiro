@@ -649,10 +649,6 @@
 }
 
 /* ── Destino favorito btn ── */
-.dest-card__visual {
-  position: relative;
-}
-
 .dest-card__fav {
   position: absolute;
   top: 12px;
