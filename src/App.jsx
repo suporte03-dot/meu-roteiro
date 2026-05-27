@@ -53,26 +53,59 @@ function IconRoute({ size = 20 }) {
 }
 
 function LogoMark({ size = 40 }) {
+  const uid = `lm-${size}`
   return (
     <svg width={size} height={size} viewBox="0 0 40 40" fill="none" aria-hidden="true">
       <defs>
-        <linearGradient id="logo-bg" x1="4" y1="2" x2="36" y2="38" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#0d9488" />
-          <stop offset="1" stopColor="#0369a1" />
+        <linearGradient id={`${uid}-sky`} x1="6" y1="4" x2="36" y2="38" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#0284C7" />
+          <stop offset="0.55" stopColor="#0D9488" />
+          <stop offset="1" stopColor="#0F766E" />
         </linearGradient>
-        <linearGradient id="logo-pin" x1="14" y1="8" x2="28" y2="30" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#ffffff" />
-          <stop offset="1" stopColor="#ccfbf1" />
+        <linearGradient id={`${uid}-pin`} x1="16" y1="12" x2="24" y2="28" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#FFFFFF" />
+          <stop offset="1" stopColor="#ECFDF5" />
         </linearGradient>
       </defs>
-      <rect width="40" height="40" rx="11" fill="url(#logo-bg)" />
-      <path d="M8 28c0-6.5 5.5-12 12-12s12 5.5 12 12" stroke="#fff" strokeOpacity="0.25" strokeWidth="1.5" strokeLinecap="round" />
-      <circle cx="12" cy="26" r="2.5" fill="#fff" fillOpacity="0.9" />
-      <circle cx="20" cy="22" r="2.5" fill="#fff" fillOpacity="0.75" />
-      <circle cx="28" cy="26" r="2.5" fill="#fff" fillOpacity="0.9" />
-      <path d="M12 26h8l8-4" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M20 10c-3.3 0-6 2.7-6 6 0 4.5 6 10 6 10s6-5.5 6-10c0-3.3-2.7-6-6-6Z" fill="url(#logo-pin)" />
-      <circle cx="20" cy="16" r="2.2" fill="#0d9488" />
+      <rect width="40" height="40" rx="11" fill={`url(#${uid}-sky)`} />
+      <circle cx="31.5" cy="9" r="4.2" fill="#FBBF24" fillOpacity="0.95" />
+      <circle cx="31.5" cy="9" r="6.5" fill="#F97316" fillOpacity="0.18" />
+      <path
+        d="M0 29.5C7 24.5 13 27.5 20 25.5C27 23.5 33 27 40 29.5V40H0V29.5Z"
+        fill="#065F46"
+        fillOpacity="0.22"
+      />
+      <path
+        d="M8.5 12.5H31.5L29.5 27.5H10.5L8.5 12.5Z"
+        fill="#FFFFFF"
+        fillOpacity="0.14"
+        stroke="#FFFFFF"
+        strokeOpacity="0.35"
+        strokeWidth="1.1"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M12.5 12.5V27.5M20 12.5V27.5M27.5 12.5V27.5"
+        stroke="#FFFFFF"
+        strokeOpacity="0.12"
+        strokeWidth="0.8"
+      />
+      <path
+        d="M11 27.5C14.5 23.5 17.5 24.5 20 22.5C22.5 20.5 26 21.5 29.5 18.5"
+        stroke="#FFFFFF"
+        strokeWidth="1.45"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeOpacity="0.9"
+      />
+      <circle cx="11" cy="27.5" r="1.7" fill="#F97316" />
+      <circle cx="20" cy="22.5" r="1.5" fill="#FFFFFF" fillOpacity="0.95" />
+      <circle cx="29.5" cy="18.5" r="1.5" fill="#FFFFFF" fillOpacity="0.95" />
+      <path
+        d="M20 11.5c-2.35 0-4.25 1.9-4.25 4.25 0 3.15 4.25 7.75 4.25 7.75s4.25-4.6 4.25-7.75c0-2.35-1.9-4.25-4.25-4.25Z"
+        fill={`url(#${uid}-pin)`}
+      />
+      <circle cx="20" cy="15.75" r="1.55" fill="#0D9488" />
     </svg>
   )
 }
@@ -222,7 +255,7 @@ function Logo({ onClick }) {
     <button type="button" className="logo" onClick={onClick} aria-label="MeuRoteiro — ir para o início">
       <span className="logo__mark"><LogoMark size={40} /></span>
       <span className="logo__name">
-        Meu<span className="logo__accent">Roteiro</span>
+        <span className="logo__prefix">Meu</span><span className="logo__accent">Roteiro</span>
       </span>
     </button>
   )
@@ -459,6 +492,7 @@ function App() {
           <div className="hero__bg" aria-hidden="true">
             <div className="hero__orb hero__orb--1" />
             <div className="hero__orb hero__orb--2" />
+            <div className="hero__orb hero__orb--3" aria-hidden="true" />
             <div className="hero__grid" />
           </div>
           <div className="container hero__grid-layout">
@@ -775,7 +809,7 @@ function App() {
         </section>
 
         {/* Orçamento */}
-        <section id="orcamento" className="section section--muted section-anchor">
+        <section id="orcamento" className="section section--warm section-anchor">
           <div className="container">
             <div className="orcamento-layout">
               <div className="section__head section__head--left">
