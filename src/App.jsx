@@ -6,6 +6,8 @@ import {
   calcularOrcamento,
   getRoteiroDias,
   contarAtividades,
+  getImagemHero,
+  getDuracaoIdeal,
 } from './data/destinos.js'
 import './App.css'
 
@@ -205,12 +207,12 @@ function Logo({ onClick }) {
 }
 
 function DestinoImagem({ destino, variant = 'card', className = 'dest-card__visual', children }) {
-  const src = variant === 'hero' ? (destino.imagemCapa ?? destino.imagem) : destino.imagem
+  const src = variant === 'hero' ? getImagemHero(destino) : destino.imagem
   return (
     <div className={className}>
       <img
         src={src}
-        alt={`Paisagem de ${destino.nome}`}
+        alt={destino.imagemAlt ?? `Paisagem de ${destino.nome}`}
         loading={variant === 'hero' ? 'eager' : 'lazy'}
         className="destino-img"
       />
@@ -265,7 +267,7 @@ function HeroPreviewCard({ destinoId, dias, estilo, orcamento, roteiroDias }) {
   return (
     <div className="hero-preview glass">
       <div className="hero-preview__thumb">
-        <img src={dest.imagemCapa ?? dest.imagem} alt="" aria-hidden="true" loading="eager" />
+        <img src={getImagemHero(dest)} alt="" aria-hidden="true" loading="eager" />
         <span className="hero-preview__badge">Roteiro pronto</span>
       </div>
       <div className="hero-preview__body">
@@ -613,7 +615,7 @@ function App() {
                       <p>{d.descricao}</p>
                       <div className="dest-card__meta">
                         <span><IconWallet size={14} /> {formatBRL(getPrecoPorPessoa(d, 3, form.estilo))} / pessoa</span>
-                        <span><IconClock size={14} /> {d.tempo}</span>
+                        <span><IconClock size={14} /> {getDuracaoIdeal(d)}</span>
                       </div>
                       <button
                         type="button"
@@ -667,7 +669,7 @@ function App() {
             <div className="roteiro-premium glass">
               <div className="roteiro-premium__cover">
                 <img
-                  src={destinoAtual.imagemCapa ?? destinoAtual.imagem}
+                  src={getImagemHero(destinoAtual)}
                   alt={`Capa do roteiro — ${destinoAtual.nome}`}
                   loading="lazy"
                 />
@@ -792,12 +794,12 @@ function App() {
               <div className="favoritos-grid">
                 {destinosFavoritos.map((d) => (
                   <article key={d.id} className="fav-card">
-                    <img src={d.imagem} alt={d.nome} className="fav-card__visual" loading="lazy" />
+                    <img src={d.imagem} alt={d.imagemAlt ?? d.nome} className="fav-card__visual" loading="lazy" />
                     <div className="fav-card__body">
                       <h3>{d.nome}</h3>
                       <div className="fav-card__meta">
                         <span><IconWallet size={13} /> {formatBRL(getPrecoPorPessoa(d, 3, form.estilo))}</span>
-                        <span><IconClock size={13} /> {d.tempo}</span>
+                        <span><IconClock size={13} /> {getDuracaoIdeal(d)}</span>
                       </div>
                       <p>{d.descricao}</p>
                       <div className="fav-card__actions">

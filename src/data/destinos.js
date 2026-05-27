@@ -18,17 +18,31 @@ export const CATEGORIA_SPLITS = {
 /** @typedef {{ periodo: string, titulo: string, descricao: string, tempo: string, custo: number }} Periodo */
 /** @typedef {{ titulo: string, periodos: Periodo[] }} DiaRoteiro */
 
+export function getImagemHero(destino) {
+  return destino.imagemHero ?? destino.imagemCapa ?? destino.imagem
+}
+
+export function getPrecoBase(destino) {
+  return destino.precoBase ?? destino.custoBasePorDia ?? 250
+}
+
+export function getDuracaoIdeal(destino) {
+  return destino.duracaoIdeal ?? destino.tempo ?? '3–4 dias'
+}
+
 export const DESTINOS = [
   {
     id: 'gramado',
     nome: 'Gramado',
     descricao: 'Charme europeu, chocolate artesanal e paisagens de serra gaúcha.',
     tags: ['Romântico', 'Família'],
-    custoBasePorDia: 290,
-    tempo: '3–4 dias',
+    precoBase: 290,
+    orcamentoBase: 290,
+    duracaoIdeal: '3–4 dias',
     diasMax: 4,
     imagem: '/images/destinos/gramado.jpg',
-    imagemCapa: '/images/destinos/gramado-hero.jpg',
+    imagemHero: '/images/destinos/gramado-hero.jpg',
+    imagemAlt: 'Centro charmoso de Gramado com arquitetura europeia e clima de serra gaúcha',
     roteiro: [
       {
         titulo: 'Chegada e charme do centro',
@@ -69,11 +83,13 @@ export const DESTINOS = [
     nome: 'Florianópolis',
     descricao: 'Praias paradisíacas, trilhas costeiras e gastronomia do mar.',
     tags: ['Praia', 'Aventura'],
-    custoBasePorDia: 245,
-    tempo: '4–5 dias',
+    precoBase: 245,
+    orcamentoBase: 245,
+    duracaoIdeal: '4–5 dias',
     diasMax: 5,
     imagem: '/images/destinos/florianopolis.jpg',
-    imagemCapa: '/images/destinos/florianopolis-hero.jpg',
+    imagemHero: '/images/destinos/florianopolis-hero.jpg',
+    imagemAlt: 'Praia ensolarada de Florianópolis com mar azul e costa verde',
     roteiro: [
       {
         titulo: 'Chegada e Lagoa da Conceição',
@@ -122,11 +138,13 @@ export const DESTINOS = [
     nome: 'Balneário Camboriú',
     descricao: 'Skyline à beira-mar, roda gigante e vida noturna vibrante.',
     tags: ['Praia', 'Cidade'],
-    custoBasePorDia: 310,
-    tempo: '3–5 dias',
+    precoBase: 310,
+    orcamentoBase: 310,
+    duracaoIdeal: '3–5 dias',
     diasMax: 4,
     imagem: '/images/destinos/bc.jpg',
-    imagemCapa: '/images/destinos/bc-hero.jpg',
+    imagemHero: '/images/destinos/bc-hero.jpg',
+    imagemAlt: 'Skyline de Balneário Camboriú com prédios altos à beira-mar',
     roteiro: [
       {
         titulo: 'Orla e teleférico',
@@ -167,11 +185,13 @@ export const DESTINOS = [
     nome: 'Foz do Iguaçu',
     descricao: 'Cataratas majestosas, natureza exuberante e tríplice fronteira.',
     tags: ['Aventura', 'Família'],
-    custoBasePorDia: 265,
-    tempo: '3–4 dias',
+    precoBase: 265,
+    orcamentoBase: 265,
+    duracaoIdeal: '3–4 dias',
     diasMax: 4,
     imagem: '/images/destinos/foz.jpg',
-    imagemCapa: '/images/destinos/foz-hero.jpg',
+    imagemHero: '/images/destinos/foz-hero.jpg',
+    imagemAlt: 'Cataratas do Iguaçu com quedas d\'água e passarelas na mata atlântica',
     roteiro: [
       {
         titulo: 'Cataratas — lado brasileiro',
@@ -212,11 +232,13 @@ export const DESTINOS = [
     nome: 'Rio de Janeiro',
     descricao: 'Ícones mundiais, praias icônicas e cultura carioca vibrante.',
     tags: ['Cidade', 'Praia'],
-    custoBasePorDia: 320,
-    tempo: '4–6 dias',
+    precoBase: 320,
+    orcamentoBase: 320,
+    duracaoIdeal: '4–6 dias',
     diasMax: 5,
     imagem: '/images/destinos/rio.jpg',
-    imagemCapa: '/images/destinos/rio-hero.jpg',
+    imagemHero: '/images/destinos/rio-hero.jpg',
+    imagemAlt: 'Cristo Redentor e paisagem icônica do Rio de Janeiro',
     roteiro: [
       {
         titulo: 'Cartões-postais',
@@ -265,11 +287,13 @@ export const DESTINOS = [
     nome: 'São Paulo',
     descricao: 'Capital cultural, gastronomia de classe mundial e arte urbana.',
     tags: ['Cidade', 'Cultura'],
-    custoBasePorDia: 285,
-    tempo: '3–5 dias',
+    precoBase: 285,
+    orcamentoBase: 285,
+    duracaoIdeal: '3–5 dias',
     diasMax: 5,
     imagem: '/images/destinos/sp.jpg',
-    imagemCapa: '/images/destinos/sp-hero.jpg',
+    imagemHero: '/images/destinos/sp-hero.jpg',
+    imagemAlt: 'Avenida Paulista e skyline urbano de São Paulo',
     roteiro: [
       {
         titulo: 'Paulista e MASP',
@@ -322,14 +346,14 @@ export function getDestino(idOrNome) {
 export function getPrecoPorPessoa(destino, dias = 3, estilo = 'Casal') {
   const mult = ESTILO_MULTIPLIER[estilo] ?? 1
   const diasNum = Math.max(1, parseInt(dias, 10) || 3)
-  return Math.round(destino.custoBasePorDia * diasNum * mult)
+  return Math.round(getPrecoBase(destino) * diasNum * mult)
 }
 
 export function calcularOrcamento(destinoId, dias, estilo, pessoas = PESSOAS_PADRAO) {
   const destino = getDestino(destinoId)
   const diasNum = Math.max(1, Math.min(30, parseInt(dias, 10) || 3))
   const mult = ESTILO_MULTIPLIER[estilo] ?? 1
-  const baseTotal = destino.custoBasePorDia * diasNum * mult * pessoas
+  const baseTotal = getPrecoBase(destino) * diasNum * mult * pessoas
 
   const hospedagem = Math.round(baseTotal * CATEGORIA_SPLITS.Hospedagem)
   const transporte = Math.round(baseTotal * CATEGORIA_SPLITS.Transporte)
