@@ -374,7 +374,8 @@
 }
 
 .hero-preview__thumb {
-  height: 120px;
+  position: relative;
+  height: 148px;
   overflow: hidden;
 }
 
@@ -385,13 +386,39 @@
   display: block;
 }
 
+.hero-preview__thumb .hero-preview__badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+}
+
+.hero-preview__body {
+  padding: 20px 22px 22px;
+}
+
 .hero-preview__header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 20px;
+  margin-bottom: 12px;
   gap: 12px;
-  padding: 20px 24px 0;
+}
+
+.hero-preview__stats {
+  margin-bottom: 16px;
+}
+
+.hero-preview__stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--surface-muted);
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--teal-dark);
 }
 
 .hero-preview__destino {
@@ -422,8 +449,7 @@
 .hero-preview__timeline {
   display: flex;
   gap: 8px;
-  margin-bottom: 20px;
-  padding: 0 24px;
+  margin-bottom: 16px;
 }
 
 .hero-preview__step {
@@ -432,13 +458,23 @@
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  padding: 12px 8px;
-  background: rgba(255, 255, 255, 0.6);
+  padding: 10px 6px;
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
-  font-size: 0.8rem;
+  text-align: center;
+  min-width: 0;
+}
+
+.hero-preview__step-title {
+  font-size: 0.68rem;
   font-weight: 600;
   color: var(--text-strong);
-  text-align: center;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .hero-preview__dot {
@@ -456,7 +492,7 @@
 
 .hero-preview__costs {
   border-top: 1px solid var(--border);
-  padding: 16px 24px 24px;
+  padding-top: 14px;
 }
 
 .hero-preview__cost-row {
@@ -762,7 +798,23 @@
   font-size: 1rem;
   font-weight: 700;
   color: var(--text-strong);
-  margin: 0 0 4px;
+  margin: 0 0 6px;
+}
+
+.fav-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--teal-dark);
+  margin-bottom: 8px;
+}
+
+.fav-card__meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .fav-card__body p {
@@ -801,7 +853,7 @@
 
 /* ── Sections ── */
 .section {
-  padding: 96px 0;
+  padding: 104px 0;
 }
 
 .section--muted {
@@ -822,12 +874,12 @@
 }
 
 .section__head h2 {
-  font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+  font-size: clamp(1.85rem, 3.5vw, 2.6rem);
   font-weight: 800;
   color: var(--text-strong);
   margin: 0 0 14px;
-  letter-spacing: -0.03em;
-  line-height: 1.15;
+  letter-spacing: -0.035em;
+  line-height: 1.12;
 }
 
 .section__head p {
@@ -848,12 +900,15 @@
   border-radius: var(--radius-lg);
   overflow: hidden;
   border: 1px solid var(--border);
-  transition: transform 0.25s, box-shadow 0.25s;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s;
+  display: flex;
+  flex-direction: column;
 }
 
 .dest-card:hover {
-  transform: translateY(-6px);
-  box-shadow: var(--shadow-lg);
+  transform: translateY(-8px);
+  box-shadow: 0 20px 48px rgba(15, 23, 42, 0.14);
+  border-color: rgba(13, 148, 136, 0.2);
 }
 
 .dest-card__visual {
@@ -894,6 +949,14 @@
 .dest-card__body {
   padding: 22px 24px 26px;
   text-align: left;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.dest-card__body .btn {
+  margin-top: auto;
+  align-self: flex-start;
 }
 
 .dest-card__tags {
@@ -1003,6 +1066,42 @@
   overflow: hidden;
 }
 
+.roteiro-premium__cover {
+  position: relative;
+  height: 200px;
+  overflow: hidden;
+}
+
+.roteiro-premium__cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.roteiro-premium__cover-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(10, 22, 40, 0.75) 0%, transparent 60%);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 24px 28px;
+  color: #fff;
+}
+
+.roteiro-premium__cover-overlay span {
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.roteiro-premium__cover-overlay small {
+  font-size: 0.875rem;
+  opacity: 0.85;
+  margin-top: 4px;
+}
+
 .roteiro-premium__tabs {
   display: flex;
   border-bottom: 1px solid var(--border);
@@ -1092,7 +1191,14 @@
   display: block;
   font-size: 0.975rem;
   color: var(--text-strong);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
+}
+
+.periodo__desc {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--text);
+  margin: 0 0 10px;
 }
 
 .periodo__meta {
@@ -1207,6 +1313,15 @@
   font-size: 2rem;
   font-weight: 800;
   letter-spacing: -0.02em;
+}
+
+.orcamento-disclaimer {
+  margin: 18px 0 0;
+  font-size: 0.8rem;
+  color: var(--text);
+  font-style: italic;
+  line-height: 1.5;
+  text-align: center;
 }
 
 /* ── Diferenciais ── */

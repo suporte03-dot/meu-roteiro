@@ -1,4 +1,12 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
+import {
+  DESTINOS,
+  getDestino,
+  getPrecoPorPessoa,
+  calcularOrcamento,
+  getRoteiroDias,
+  contarAtividades,
+} from './data/destinos.js'
 import './App.css'
 
 const HEADER_OFFSET = 80
@@ -160,188 +168,12 @@ const METRICAS = [
 
 const ESTILOS = ['Econômica', 'Família', 'Casal', 'Aventura', 'Luxo']
 
-const ESTILO_MULTIPLIER = {
-  Econômica: 0.78,
-  Família: 1.0,
-  Casal: 1.12,
-  Aventura: 1.08,
-  Luxo: 1.65,
-}
-
 const ORCAMENTO_OPCOES = [
   { value: '1500', label: 'Até R$ 1.500' },
   { value: '3000', label: 'R$ 1.500 – R$ 3.000' },
   { value: '6000', label: 'R$ 3.000 – R$ 6.000' },
   { value: '6000+', label: 'Acima de R$ 6.000' },
 ]
-
-const DESTINOS = [
-  {
-    id: 'gramado',
-    nome: 'Gramado',
-    descricao: 'Charme europeu, chocolate artesanal e paisagens de serra.',
-    tags: ['Romântico', 'Família'],
-    precoBase: 1800,
-    tempo: '3–4 dias',
-    gradient: 'grad-gramado',
-    imagem: '/images/destinos/gramado.jpg',
-  },
-  {
-    id: 'florianopolis',
-    nome: 'Florianópolis',
-    descricao: 'Praias paradisíacas, trilhas e gastronomia costeira.',
-    tags: ['Praia', 'Aventura'],
-    precoBase: 2200,
-    tempo: '4–5 dias',
-    gradient: 'grad-floripa',
-    imagem: '/images/destinos/florianopolis.jpg',
-  },
-  {
-    id: 'bc',
-    nome: 'Balneário Camboriú',
-    descricao: 'Arranha-céus à beira-mar e vida noturna vibrante.',
-    tags: ['Praia', 'Cidade'],
-    precoBase: 2500,
-    tempo: '3–5 dias',
-    gradient: 'grad-bc',
-    imagem: '/images/destinos/bc.jpg',
-  },
-  {
-    id: 'foz',
-    nome: 'Foz do Iguaçu',
-    descricao: 'Cataratas majestosas e contato com a natureza.',
-    tags: ['Aventura', 'Família'],
-    precoBase: 2800,
-    tempo: '3–4 dias',
-    gradient: 'grad-foz',
-    imagem: '/images/destinos/foz.jpg',
-  },
-  {
-    id: 'rio',
-    nome: 'Rio de Janeiro',
-    descricao: 'Ícones mundiais, samba e paisagens inesquecíveis.',
-    tags: ['Cidade', 'Praia'],
-    precoBase: 2400,
-    tempo: '4–6 dias',
-    gradient: 'grad-rio',
-    imagem: '/images/destinos/rio.jpg',
-  },
-  {
-    id: 'sp',
-    nome: 'São Paulo',
-    descricao: 'Capital cultural com gastronomia e arte de classe mundial.',
-    tags: ['Cidade', 'Econômico'],
-    precoBase: 1600,
-    tempo: '3–5 dias',
-    gradient: 'grad-sp',
-    imagem: '/images/destinos/sp.jpg',
-  },
-]
-
-const ROTEIROS_POR_DESTINO = {
-  gramado: [
-    { titulo: 'Chegada e centro', periodos: [
-      { periodo: 'Manhã', atividade: 'Check-in e café colonial', tempo: '2h', custo: 80 },
-      { periodo: 'Tarde', atividade: 'Rua Coberta e Mini Mundo', tempo: '4h', custo: 120 },
-      { periodo: 'Noite', atividade: 'Jantar romântico no Lago Negro', tempo: '3h', custo: 180 },
-    ]},
-    { titulo: 'Natureza e chocolate', periodos: [
-      { periodo: 'Manhã', atividade: 'Cascata do Caracol de bondinho', tempo: '3h', custo: 95 },
-      { periodo: 'Tarde', atividade: 'Fábrica de chocolate e almoço na serra', tempo: '4h', custo: 150 },
-      { periodo: 'Noite', atividade: 'Jantar especial e passeio noturno', tempo: '2h', custo: 200 },
-    ]},
-    { titulo: 'Despedida', periodos: [
-      { periodo: 'Manhã', atividade: 'Café da manhã e souvenirs', tempo: '2h', custo: 90 },
-      { periodo: 'Tarde', atividade: 'Centro histórico e últimas compras', tempo: '3h', custo: 60 },
-      { periodo: 'Noite', atividade: 'Retorno com memórias incríveis', tempo: '—', custo: 350 },
-    ]},
-  ],
-  florianopolis: [
-    { titulo: 'Praias do norte', periodos: [
-      { periodo: 'Manhã', atividade: 'Praia da Joaquina e dunas', tempo: '3h', custo: 60 },
-      { periodo: 'Tarde', atividade: 'Almoço de frutos do mar em Lagoa', tempo: '3h', custo: 140 },
-      { periodo: 'Noite', atividade: 'Pôr do sol na Lagoa da Conceição', tempo: '2h', custo: 80 },
-    ]},
-    { titulo: 'Trilhas e natureza', periodos: [
-      { periodo: 'Manhã', atividade: 'Trilha da Lagoinha do Leste', tempo: '4h', custo: 40 },
-      { periodo: 'Tarde', atividade: 'Almoço na praia e descanso', tempo: '3h', custo: 100 },
-      { periodo: 'Noite', atividade: 'Jantar no centro histórico', tempo: '2h', custo: 160 },
-    ]},
-    { titulo: 'Cultura e despedida', periodos: [
-      { periodo: 'Manhã', atividade: 'Mercado Público e azulejos', tempo: '2h', custo: 50 },
-      { periodo: 'Tarde', atividade: 'Praia do Campeche ou surf', tempo: '4h', custo: 90 },
-      { periodo: 'Noite', atividade: 'Retorno ao continente', tempo: '—', custo: 280 },
-    ]},
-  ],
-  bc: [
-    { titulo: 'Orla e teleférico', periodos: [
-      { periodo: 'Manhã', atividade: 'Check-in e passeio pela Central', tempo: '2h', custo: 70 },
-      { periodo: 'Tarde', atividade: 'Teleférico Unipraias e praias', tempo: '4h', custo: 180 },
-      { periodo: 'Noite', atividade: 'Jantar com vista para o mar', tempo: '3h', custo: 200 },
-    ]},
-    { titulo: 'Aventura e parques', periodos: [
-      { periodo: 'Manhã', atividade: 'Parque Unipraias e tirolesa', tempo: '3h', custo: 220 },
-      { periodo: 'Tarde', atividade: 'Almoço na Barra Sul', tempo: '3h', custo: 130 },
-      { periodo: 'Noite', atividade: 'Vida noturna na Avenida Atlântica', tempo: '4h', custo: 150 },
-    ]},
-    { titulo: 'Relax e retorno', periodos: [
-      { periodo: 'Manhã', atividade: 'Praia Brava ou Praia dos Amores', tempo: '3h', custo: 40 },
-      { periodo: 'Tarde', atividade: 'Compras e café na orla', tempo: '2h', custo: 80 },
-      { periodo: 'Noite', atividade: 'Despedida e retorno', tempo: '—', custo: 320 },
-    ]},
-  ],
-  foz: [
-    { titulo: 'Cataratas brasileiras', periodos: [
-      { periodo: 'Manhã', atividade: 'Parque Nacional das Cataratas', tempo: '4h', custo: 180 },
-      { periodo: 'Tarde', atividade: 'Almoço no parque e passeio de barco', tempo: '3h', custo: 250 },
-      { periodo: 'Noite', atividade: 'Jantar e show das Cataratas', tempo: '3h', custo: 200 },
-    ]},
-    { titulo: 'Tríplice fronteira', periodos: [
-      { periodo: 'Manhã', atividade: 'Marco das Três Fronteiras', tempo: '2h', custo: 60 },
-      { periodo: 'Tarde', atividade: 'Parque das Aves e Itaipu', tempo: '5h', custo: 190 },
-      { periodo: 'Noite', atividade: 'Jantar na Argentina (Ciudad del Este)', tempo: '3h', custo: 170 },
-    ]},
-    { titulo: 'Natureza e despedida', periodos: [
-      { periodo: 'Manhã', atividade: 'Macuco Safari ou helicóptero', tempo: '3h', custo: 350 },
-      { periodo: 'Tarde', atividade: 'Compras de souvenirs e café', tempo: '2h', custo: 70 },
-      { periodo: 'Noite', atividade: 'Retorno ao aeroporto', tempo: '—', custo: 400 },
-    ]},
-  ],
-  rio: [
-    { titulo: 'Ícones do Rio', periodos: [
-      { periodo: 'Manhã', atividade: 'Cristo Redentor e Pão de Açúcar', tempo: '5h', custo: 220 },
-      { periodo: 'Tarde', atividade: 'Almoço em Santa Teresa', tempo: '2h', custo: 120 },
-      { periodo: 'Noite', atividade: 'Lapa e samba ao vivo', tempo: '4h', custo: 100 },
-    ]},
-    { titulo: 'Praias e natureza', periodos: [
-      { periodo: 'Manhã', atividade: 'Praia de Copacabana e Ipanema', tempo: '3h', custo: 50 },
-      { periodo: 'Tarde', atividade: 'Trilha do Morro Dois Irmãos', tempo: '4h', custo: 40 },
-      { periodo: 'Noite', atividade: 'Jantar em Ipanema', tempo: '3h', custo: 180 },
-    ]},
-    { titulo: 'Cultura carioca', periodos: [
-      { periodo: 'Manhã', atividade: 'Museu do Amanhã e Porto Maravilha', tempo: '3h', custo: 80 },
-      { periodo: 'Tarde', atividade: 'Feira de São Cristóvão', tempo: '3h', custo: 90 },
-      { periodo: 'Noite', atividade: 'Despedida na orla', tempo: '—', custo: 350 },
-    ]},
-  ],
-  sp: [
-    { titulo: 'Centro e cultura', periodos: [
-      { periodo: 'Manhã', atividade: 'MASP e Avenida Paulista', tempo: '3h', custo: 60 },
-      { periodo: 'Tarde', atividade: 'Almoço no Mercado Municipal', tempo: '2h', custo: 80 },
-      { periodo: 'Noite', atividade: 'Teatro ou show na Paulista', tempo: '3h', custo: 150 },
-    ]},
-    { titulo: 'Gastronomia e bairros', periodos: [
-      { periodo: 'Manhã', atividade: 'Vila Madalena e Beco do Batman', tempo: '3h', custo: 40 },
-      { periodo: 'Tarde', atividade: 'Almoço em restaurante premiado', tempo: '2h', custo: 200 },
-      { periodo: 'Noite', atividade: 'Pinheiros e bares artesanais', tempo: '4h', custo: 120 },
-    ]},
-    { titulo: 'Parques e despedida', periodos: [
-      { periodo: 'Manhã', atividade: 'Parque Ibirapuera e museus', tempo: '3h', custo: 30 },
-      { periodo: 'Tarde', atividade: 'Liberdade e compras', tempo: '3h', custo: 70 },
-      { periodo: 'Noite', atividade: 'Retorno ao aeroporto', tempo: '—', custo: 250 },
-    ]},
-  ],
-}
 
 const PASSOS = [
   { num: '01', titulo: 'Escolha o destino', desc: 'Explore mais de 50 destinos brasileiros com filtros por estilo, clima e orçamento.' },
@@ -359,56 +191,6 @@ const DIFERENCIAIS = [
   { icon: IconCompass, titulo: 'Comparação de estilos', desc: 'Veja como muda o roteiro entre econômico, família ou luxo.' },
 ]
 
-/* ── Helpers ── */
-function getDestino(idOrNome) {
-  return DESTINOS.find((d) => d.id === idOrNome || d.nome === idOrNome) ?? DESTINOS[0]
-}
-
-function calcularOrcamento(destinoId, dias, estilo) {
-  const destino = getDestino(destinoId)
-  const diasNum = Math.max(1, Math.min(30, parseInt(dias, 10) || 3))
-  const mult = ESTILO_MULTIPLIER[estilo] ?? 1
-  const fatorDias = diasNum / 3
-
-  const base = destino.precoBase * mult
-  const hospedagem = Math.round(base * 0.44 * fatorDias)
-  const transporte = Math.round(base * 0.17)
-  const alimentacao = Math.round(base * 0.23 * fatorDias)
-  const passeios = Math.round(base * 0.16 * fatorDias)
-  const subtotal = hospedagem + transporte + alimentacao + passeios
-  const reserva = Math.round(subtotal * 0.1)
-  const total = subtotal + reserva
-
-  const pct = (v) => Math.round((v / total) * 100)
-
-  return {
-    categorias: [
-      { categoria: 'Hospedagem', valor: hospedagem, pct: pct(hospedagem) },
-      { categoria: 'Transporte', valor: transporte, pct: pct(transporte) },
-      { categoria: 'Alimentação', valor: alimentacao, pct: pct(alimentacao) },
-      { categoria: 'Passeios', valor: passeios, pct: pct(passeios) },
-    ],
-    reserva,
-    total,
-    dias: diasNum,
-  }
-}
-
-function getRoteiroDias(destinoId, dias, estilo) {
-  const template = ROTEIROS_POR_DESTINO[destinoId] ?? ROTEIROS_POR_DESTINO.gramado
-  const diasNum = Math.max(1, Math.min(template.length, parseInt(dias, 10) || 3))
-  const mult = (ESTILO_MULTIPLIER[estilo] ?? 1) / ESTILO_MULTIPLIER.Casal
-
-  return template.slice(0, diasNum).map((dia, i) => ({
-    id: i,
-    label: `Dia ${i + 1}`,
-    titulo: dia.titulo,
-    periodos: dia.periodos.map((p) => ({
-      ...p,
-      custo: formatBRL(Math.round(p.custo * mult)),
-    })),
-  }))
-}
 
 /* ── Sub-components ── */
 function Logo({ onClick }) {
@@ -422,13 +204,14 @@ function Logo({ onClick }) {
   )
 }
 
-function DestinoImagem({ destino, className = 'dest-card__visual', children }) {
+function DestinoImagem({ destino, variant = 'card', className = 'dest-card__visual', children }) {
+  const src = variant === 'hero' ? (destino.imagemCapa ?? destino.imagem) : destino.imagem
   return (
     <div className={className}>
       <img
-        src={destino.imagem}
+        src={src}
         alt={`Paisagem de ${destino.nome}`}
-        loading="lazy"
+        loading={variant === 'hero' ? 'eager' : 'lazy'}
         className="destino-img"
       />
       <div className="dest-card__overlay" aria-hidden="true" />
@@ -474,43 +257,53 @@ function Header({ menuOpen, setMenuOpen, onNav, onCriarRoteiro }) {
   )
 }
 
-function HeroPreviewCard({ destino, dias, estilo, orcamento }) {
-  const dest = getDestino(destino)
-  const diasTemplate = ROTEIROS_POR_DESTINO[dest.id] ?? ROTEIROS_POR_DESTINO.gramado
-  const miniDias = diasTemplate.slice(0, Math.min(parseInt(dias, 10) || 3, 3)).map((d) => d.titulo.split(' ')[0])
+function HeroPreviewCard({ destinoId, dias, estilo, orcamento, roteiroDias }) {
+  const dest = getDestino(destinoId)
+  const atividades = contarAtividades(roteiroDias)
+  const miniDias = roteiroDias.slice(0, 3)
 
   return (
     <div className="hero-preview glass">
       <div className="hero-preview__thumb">
-        <img src={dest.imagem} alt="" aria-hidden="true" loading="eager" />
-      </div>
-      <div className="hero-preview__header">
-        <div>
-          <span className="hero-preview__destino">{dest.nome}</span>
-          <span className="hero-preview__meta">{dias} dias · {estilo} · {formatBRL(orcamento.total)}</span>
-        </div>
+        <img src={dest.imagemCapa ?? dest.imagem} alt="" aria-hidden="true" loading="eager" />
         <span className="hero-preview__badge">Roteiro pronto</span>
       </div>
-      <div className="hero-preview__timeline">
-        {miniDias.map((dia, i) => (
-          <div key={dia} className="hero-preview__step">
-            <span className="hero-preview__dot">{i + 1}</span>
-            <span>{dia}</span>
+      <div className="hero-preview__body">
+        <div className="hero-preview__header">
+          <div>
+            <span className="hero-preview__destino">{dest.nome}</span>
+            <span className="hero-preview__meta">
+              {dias} dias · {estilo} · {formatBRL(orcamento.total)}
+            </span>
           </div>
-        ))}
-      </div>
-      <div className="hero-preview__costs">
-        <div className="hero-preview__cost-row">
-          <span>Hospedagem</span>
-          <strong>{formatBRL(orcamento.categorias[0].valor)}</strong>
         </div>
-        <div className="hero-preview__cost-row">
-          <span>Passeios + refeições</span>
-          <strong>{formatBRL(orcamento.categorias[2].valor + orcamento.categorias[3].valor)}</strong>
+        <div className="hero-preview__stats">
+          <span className="hero-preview__stat">
+            <IconMap size={14} />
+            {atividades} atividades sugeridas
+          </span>
         </div>
-        <div className="hero-preview__cost-row hero-preview__cost-row--total">
-          <span>Total estimado</span>
-          <strong>{formatBRL(orcamento.total)}</strong>
+        <div className="hero-preview__timeline">
+          {miniDias.map((dia, i) => (
+            <div key={dia.label} className="hero-preview__step">
+              <span className="hero-preview__dot">{i + 1}</span>
+              <span className="hero-preview__step-title">{dia.titulo}</span>
+            </div>
+          ))}
+        </div>
+        <div className="hero-preview__costs">
+          <div className="hero-preview__cost-row">
+            <span>Hospedagem</span>
+            <strong>{formatBRL(orcamento.categorias[0].valor)}</strong>
+          </div>
+          <div className="hero-preview__cost-row">
+            <span>Passeios + refeições</span>
+            <strong>{formatBRL(orcamento.categorias[2].valor + orcamento.categorias[3].valor)}</strong>
+          </div>
+          <div className="hero-preview__cost-row hero-preview__cost-row--total">
+            <span>Total estimado</span>
+            <strong>{formatBRL(orcamento.total)}</strong>
+          </div>
         </div>
       </div>
     </div>
@@ -560,6 +353,8 @@ function App() {
     () => getRoteiroDias(viagem.destinoId, viagem.dias, viagem.estilo),
     [viagem.destinoId, viagem.dias, viagem.estilo],
   )
+
+  const totalAtividades = useMemo(() => contarAtividades(roteiroDias), [roteiroDias])
 
   const diaSelecionado = roteiroDias[diaAtivo] ?? roteiroDias[0]
 
@@ -664,14 +459,15 @@ function App() {
             </div>
             <div className="hero__visual">
               <HeroPreviewCard
-                destino={viagem.destinoId}
+                destinoId={viagem.destinoId}
                 dias={viagem.dias}
                 estilo={viagem.estilo}
                 orcamento={orcamento}
+                roteiroDias={roteiroDias}
               />
               <div className="hero__float hero__float--1 glass">
-                <IconMap size={16} />
-                <span>{roteiroDias.length * 3} atividades sugeridas</span>
+                <IconSpark size={16} />
+                <span>{totalAtividades} atividades sugeridas</span>
               </div>
               <div className="hero__float hero__float--2 glass">
                 <IconWallet size={16} />
@@ -816,7 +612,7 @@ function App() {
                       <h3>{d.nome}</h3>
                       <p>{d.descricao}</p>
                       <div className="dest-card__meta">
-                        <span><IconWallet size={14} /> {formatBRL(d.precoBase)} / pessoa</span>
+                        <span><IconWallet size={14} /> {formatBRL(getPrecoPorPessoa(d, 3, form.estilo))} / pessoa</span>
                         <span><IconClock size={14} /> {d.tempo}</span>
                       </div>
                       <button
@@ -869,6 +665,17 @@ function App() {
               </p>
             </div>
             <div className="roteiro-premium glass">
+              <div className="roteiro-premium__cover">
+                <img
+                  src={destinoAtual.imagemCapa ?? destinoAtual.imagem}
+                  alt={`Capa do roteiro — ${destinoAtual.nome}`}
+                  loading="lazy"
+                />
+                <div className="roteiro-premium__cover-overlay">
+                  <span>{destinoAtual.nome}</span>
+                  <small>{viagem.estilo} · {totalAtividades} atividades</small>
+                </div>
+              </div>
               <div className="roteiro-premium__tabs" role="tablist" aria-label="Dias do roteiro">
                 {roteiroDias.map((dia) => (
                   <button
@@ -895,10 +702,11 @@ function App() {
                 <h3>{diaSelecionado?.titulo}</h3>
                 <div className="periodos">
                   {diaSelecionado?.periodos.map((p) => (
-                    <article key={p.periodo} className="periodo">
+                    <article key={`${p.periodo}-${p.titulo}`} className="periodo">
                       <span className="periodo__label">{p.periodo}</span>
                       <div className="periodo__info">
-                        <strong>{p.atividade}</strong>
+                        <strong>{p.titulo}</strong>
+                        {p.descricao && <p className="periodo__desc">{p.descricao}</p>}
                         <div className="periodo__meta">
                           <span><IconClock size={13} /> {p.tempo}</span>
                           <span><IconWallet size={13} /> {p.custo}</span>
@@ -920,7 +728,7 @@ function App() {
                 <span className="eyebrow">Orçamento visual</span>
                 <h2>Estimativa de custos</h2>
                 <p>
-                  Valores para 2 pessoas · {orcamento.dias} dias em {destinoAtual.nome} · estilo {viagem.estilo}.
+                  Estimativa média para {orcamento.pessoas} pessoas e {orcamento.dias} dias em {destinoAtual.nome} · estilo {viagem.estilo}.
                 </p>
               </div>
               <div className="orcamento-panel glass">
@@ -945,10 +753,13 @@ function App() {
                 <div className="orcamento-total">
                   <div>
                     <span>Total estimado</span>
-                    <small>Para 2 pessoas · {orcamento.dias} dias · {destinoAtual.nome}</small>
+                    <small>Para {orcamento.pessoas} pessoas · {orcamento.dias} dias · {destinoAtual.nome}</small>
                   </div>
                   <strong>{formatBRL(orcamento.total)}</strong>
                 </div>
+                <p className="orcamento-disclaimer">
+                  Valores estimados e sujeitos a variação conforme temporada e perfil da viagem.
+                </p>
               </div>
             </div>
           </div>
@@ -984,6 +795,10 @@ function App() {
                     <img src={d.imagem} alt={d.nome} className="fav-card__visual" loading="lazy" />
                     <div className="fav-card__body">
                       <h3>{d.nome}</h3>
+                      <div className="fav-card__meta">
+                        <span><IconWallet size={13} /> {formatBRL(getPrecoPorPessoa(d, 3, form.estilo))}</span>
+                        <span><IconClock size={13} /> {d.tempo}</span>
+                      </div>
                       <p>{d.descricao}</p>
                       <div className="fav-card__actions">
                         <button
