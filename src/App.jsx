@@ -9,6 +9,7 @@ import {
   getImagemHero,
   getDuracaoIdeal,
 } from './data/destinos.js'
+import { getMapQuery, openRoute, openDayRoute } from './utils/maps.js'
 import './App.css'
 
 const HEADER_OFFSET = 80
@@ -140,6 +141,23 @@ function IconClock({ size = 14 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
       <circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" />
+    </svg>
+  )
+}
+
+function IconMapPin({ size = 14 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" />
+      <circle cx="12" cy="10" r="3" />
+    </svg>
+  )
+}
+
+function IconNavigation({ size = 14 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <polygon points="3 11 22 2 13 21 11 13 3 11" />
     </svg>
   )
 }
@@ -701,9 +719,24 @@ function App() {
                 id={`panel-dia-${diaSelecionado?.id}`}
                 aria-labelledby={`tab-dia-${diaSelecionado?.id}`}
               >
-                <h3>{diaSelecionado?.titulo}</h3>
+                <div className="roteiro-premium__day-head">
+                  <h3>{diaSelecionado?.titulo}</h3>
+                  {diaSelecionado?.periodos.some((p) => getMapQuery(p)) && (
+                    <button
+                      type="button"
+                      className="btn-route btn-route--day"
+                      aria-label={`Abrir rota completa do ${diaSelecionado.label}`}
+                      onClick={() => openDayRoute(diaSelecionado.periodos)}
+                    >
+                      <IconNavigation size={14} />
+                      Ver rota do dia
+                    </button>
+                  )}
+                </div>
                 <div className="periodos">
-                  {diaSelecionado?.periodos.map((p) => (
+                  {diaSelecionado?.periodos.map((p) => {
+                    const mapQuery = getMapQuery(p)
+                    return (
                     <article key={`${p.periodo}-${p.titulo}`} className="periodo">
                       <span className="periodo__label">{p.periodo}</span>
                       <div className="periodo__info">
@@ -714,8 +747,22 @@ function App() {
                           <span><IconWallet size={13} /> {p.custo}</span>
                         </div>
                       </div>
+                      <div className="periodo__actions">
+                        {mapQuery && (
+                          <button
+                            type="button"
+                            className="btn-route"
+                            aria-label={`Abrir rota para ${p.titulo}`}
+                            onClick={() => openRoute(mapQuery)}
+                          >
+                            <IconMapPin size={14} />
+                            Ver rota
+                          </button>
+                        )}
+                      </div>
                     </article>
-                  ))}
+                    )
+                  })}
                 </div>
               </div>
             </div>
