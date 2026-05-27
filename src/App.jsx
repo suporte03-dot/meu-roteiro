@@ -14,6 +14,7 @@ import {
   getHeroImageAlt,
 } from './data/destinos.js'
 import { getMapQuery, openRoute, openDayRoute } from './utils/maps.js'
+import Logo from './components/Logo.jsx'
 import './App.css'
 
 const HEADER_OFFSET = 84
@@ -48,72 +49,6 @@ function IconRoute({ size = 20 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <circle cx="6" cy="19" r="3" /><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15" /><circle cx="18" cy="5" r="3" />
-    </svg>
-  )
-}
-
-function LogoMark({ size = 44 }) {
-  const uid = `lm-${size}`
-  return (
-    <svg width={size} height={size} viewBox="0 0 44 44" fill="none" aria-hidden="true">
-      <defs>
-        <linearGradient id={`${uid}-bg`} x1="6" y1="2" x2="40" y2="42" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#0EA5E9" />
-          <stop offset="0.48" stopColor="#14B8A6" />
-          <stop offset="1" stopColor="#0F766E" />
-        </linearGradient>
-        <linearGradient id={`${uid}-route`} x1="8" y1="32" x2="36" y2="12" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#F59E0B" />
-          <stop offset="1" stopColor="#FFFFFF" />
-        </linearGradient>
-        <linearGradient id={`${uid}-shine`} x1="8" y1="4" x2="28" y2="24" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#FFFFFF" stopOpacity="0.45" />
-          <stop offset="1" stopColor="#FFFFFF" stopOpacity="0" />
-        </linearGradient>
-        <filter id={`${uid}-shadow`} x="-20%" y="-10%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="4" stdDeviation="4" floodColor="#0F766E" floodOpacity="0.35" />
-        </filter>
-      </defs>
-      <rect width="44" height="44" rx="13" fill={`url(#${uid}-bg)`} filter={`url(#${uid}-shadow)`} />
-      <rect x="1.5" y="1.5" width="41" height="41" rx="11.5" stroke="#FFFFFF" strokeOpacity="0.28" strokeWidth="1" />
-      <ellipse cx="18" cy="10" rx="14" ry="8" fill={`url(#${uid}-shine)`} />
-      <circle cx="35.5" cy="10.5" r="4.8" fill="#FBBF24" />
-      <circle cx="35.5" cy="10.5" r="7.5" fill="#F59E0B" fillOpacity="0.22" />
-      <path
-        d="M0 32.5C8 26.5 14 29.5 22 27C30 24.5 36 28.5 44 32.5V44H0V32.5Z"
-        fill="#064E3B"
-        fillOpacity="0.28"
-      />
-      <path
-        d="M7 15.5H37L34.5 31H9.5L7 15.5Z"
-        fill="#FFFFFF"
-        fillOpacity="0.12"
-        stroke="#FFFFFF"
-        strokeOpacity="0.22"
-        strokeWidth="1.15"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M11.5 15.5V31M22 15.5V31M32.5 15.5V31"
-        stroke="#FFFFFF"
-        strokeOpacity="0.1"
-        strokeWidth="0.85"
-      />
-      <path
-        d="M9.5 31.5C14.5 25.5 18 26.5 22 24.5C26 22.5 30.5 23.5 35.5 17.5"
-        stroke={`url(#${uid}-route)`}
-        strokeWidth="2.35"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <circle cx="9.5" cy="31.5" r="2.1" fill="#F59E0B" stroke="#FFFFFF" strokeWidth="0.8" />
-      <circle cx="35.5" cy="17.5" r="1.9" fill="#FFFFFF" fillOpacity="0.95" />
-      <path
-        d="M22 12.5c-2.65 0-4.8 2.15-4.8 4.8 0 3.55 4.8 9 4.8 9s4.8-5.45 4.8-9c0-2.65-2.15-4.8-4.8-4.8Z"
-        fill="#FFFFFF"
-      />
-      <circle cx="22" cy="17.3" r="2.15" fill="#14B8A6" />
-      <circle cx="22" cy="17.3" r="0.85" fill="#0F766E" />
     </svg>
   )
 }
@@ -258,17 +193,6 @@ const DIFERENCIAIS = [
 
 
 /* ── Sub-components ── */
-function Logo({ onClick }) {
-  return (
-    <button type="button" className="logo" onClick={onClick} aria-label="MeuRoteiro — ir para o início">
-      <span className="logo__mark"><LogoMark size={46} /></span>
-      <span className="logo__name">
-        <span className="logo__prefix">Meu</span><span className="logo__accent">Roteiro</span>
-      </span>
-    </button>
-  )
-}
-
 function DestinoImagem({ destino, variant = 'card', className = 'dest-card__visual', children }) {
   const isHero = variant === 'hero'
   const src = isHero ? getHeroImage(destino) : getCardImage(destino)
@@ -290,7 +214,7 @@ function Header({ menuOpen, setMenuOpen, onNav, onCriarRoteiro }) {
   return (
     <header className="header">
       <div className="container header__inner">
-        <Logo onClick={() => { setMenuOpen(false); onNav('inicio') }} />
+        <Logo variant="full" size="lg" onClick={() => { setMenuOpen(false); onNav('inicio') }} />
         <nav className={`nav ${menuOpen ? 'nav--open' : ''}`} aria-label="Menu principal">
           {NAV_LINKS.map((link) => (
             <button
@@ -958,7 +882,7 @@ function App() {
       <footer className="footer">
         <div className="container footer__inner">
           <div className="footer__brand">
-            <Logo onClick={() => scrollToSection('inicio')} />
+            <Logo variant="full" size="md" inverted onClick={() => scrollToSection('inicio')} />
             <p>Viaje melhor, planeje com facilidade.</p>
           </div>
           <nav className="footer__nav" aria-label="Links do rodapé">
