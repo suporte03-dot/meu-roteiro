@@ -8,6 +8,10 @@ import {
   contarAtividades,
   getImagemHero,
   getDuracaoIdeal,
+  getCardImage,
+  getHeroImage,
+  getCardImageAlt,
+  getHeroImageAlt,
 } from './data/destinos.js'
 import { getMapQuery, openRoute, openDayRoute } from './utils/maps.js'
 import './App.css'
@@ -225,13 +229,14 @@ function Logo({ onClick }) {
 }
 
 function DestinoImagem({ destino, variant = 'card', className = 'dest-card__visual', children }) {
-  const src = variant === 'hero' ? getImagemHero(destino) : destino.imagem
+  const isHero = variant === 'hero'
+  const src = isHero ? getHeroImage(destino) : getCardImage(destino)
   return (
     <div className={className}>
       <img
         src={src}
-        alt={destino.imagemAlt ?? `Paisagem de ${destino.nome}`}
-        loading={variant === 'hero' ? 'eager' : 'lazy'}
+        alt={isHero ? getHeroImageAlt(destino) : getCardImageAlt(destino)}
+        loading={isHero ? 'eager' : 'lazy'}
         className="destino-img"
       />
       <div className="dest-card__overlay" aria-hidden="true" />
@@ -285,7 +290,7 @@ function HeroPreviewCard({ destinoId, dias, estilo, orcamento, roteiroDias }) {
   return (
     <div className="hero-preview glass">
       <div className="hero-preview__thumb">
-        <img src={getImagemHero(dest)} alt="" aria-hidden="true" loading="eager" />
+        <img src={getHeroImage(dest)} alt="" aria-hidden="true" loading="eager" />
         <span className="hero-preview__badge">Roteiro pronto</span>
       </div>
       <div className="hero-preview__body">
@@ -687,8 +692,8 @@ function App() {
             <div className="roteiro-premium glass">
               <div className="roteiro-premium__cover">
                 <img
-                  src={getImagemHero(destinoAtual)}
-                  alt={`Capa do roteiro — ${destinoAtual.nome}`}
+                  src={getHeroImage(destinoAtual)}
+                  alt={getHeroImageAlt(destinoAtual)}
                   loading="lazy"
                 />
                 <div className="roteiro-premium__cover-overlay">
@@ -841,7 +846,7 @@ function App() {
               <div className="favoritos-grid">
                 {destinosFavoritos.map((d) => (
                   <article key={d.id} className="fav-card">
-                    <img src={d.imagem} alt={d.imagemAlt ?? d.nome} className="fav-card__visual" loading="lazy" />
+                    <img src={getCardImage(d)} alt={getCardImageAlt(d)} className="fav-card__visual" loading="lazy" />
                     <div className="fav-card__body">
                       <h3>{d.nome}</h3>
                       <div className="fav-card__meta">
