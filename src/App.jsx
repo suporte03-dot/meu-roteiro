@@ -16,7 +16,7 @@ import {
 import { getMapQuery, openRoute, openDayRoute } from './utils/maps.js'
 import './App.css'
 
-const HEADER_OFFSET = 80
+const HEADER_OFFSET = 84
 const FAVORITOS_KEY = 'meuRoteiro_favoritos'
 
 /* ── Scroll helper ── */
@@ -52,60 +52,68 @@ function IconRoute({ size = 20 }) {
   )
 }
 
-function LogoMark({ size = 40 }) {
+function LogoMark({ size = 44 }) {
   const uid = `lm-${size}`
   return (
-    <svg width={size} height={size} viewBox="0 0 40 40" fill="none" aria-hidden="true">
+    <svg width={size} height={size} viewBox="0 0 44 44" fill="none" aria-hidden="true">
       <defs>
-        <linearGradient id={`${uid}-sky`} x1="6" y1="4" x2="36" y2="38" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#0284C7" />
-          <stop offset="0.55" stopColor="#0D9488" />
+        <linearGradient id={`${uid}-bg`} x1="6" y1="2" x2="40" y2="42" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#0EA5E9" />
+          <stop offset="0.48" stopColor="#14B8A6" />
           <stop offset="1" stopColor="#0F766E" />
         </linearGradient>
-        <linearGradient id={`${uid}-pin`} x1="16" y1="12" x2="24" y2="28" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#FFFFFF" />
-          <stop offset="1" stopColor="#ECFDF5" />
+        <linearGradient id={`${uid}-route`} x1="8" y1="32" x2="36" y2="12" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#F59E0B" />
+          <stop offset="1" stopColor="#FFFFFF" />
         </linearGradient>
+        <linearGradient id={`${uid}-shine`} x1="8" y1="4" x2="28" y2="24" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#FFFFFF" stopOpacity="0.45" />
+          <stop offset="1" stopColor="#FFFFFF" stopOpacity="0" />
+        </linearGradient>
+        <filter id={`${uid}-shadow`} x="-20%" y="-10%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="4" stdDeviation="4" floodColor="#0F766E" floodOpacity="0.35" />
+        </filter>
       </defs>
-      <rect width="40" height="40" rx="11" fill={`url(#${uid}-sky)`} />
-      <circle cx="31.5" cy="9" r="4.2" fill="#FBBF24" fillOpacity="0.95" />
-      <circle cx="31.5" cy="9" r="6.5" fill="#F97316" fillOpacity="0.18" />
+      <rect width="44" height="44" rx="13" fill={`url(#${uid}-bg)`} filter={`url(#${uid}-shadow)`} />
+      <rect x="1.5" y="1.5" width="41" height="41" rx="11.5" stroke="#FFFFFF" strokeOpacity="0.28" strokeWidth="1" />
+      <ellipse cx="18" cy="10" rx="14" ry="8" fill={`url(#${uid}-shine)`} />
+      <circle cx="35.5" cy="10.5" r="4.8" fill="#FBBF24" />
+      <circle cx="35.5" cy="10.5" r="7.5" fill="#F59E0B" fillOpacity="0.22" />
       <path
-        d="M0 29.5C7 24.5 13 27.5 20 25.5C27 23.5 33 27 40 29.5V40H0V29.5Z"
-        fill="#065F46"
-        fillOpacity="0.22"
+        d="M0 32.5C8 26.5 14 29.5 22 27C30 24.5 36 28.5 44 32.5V44H0V32.5Z"
+        fill="#064E3B"
+        fillOpacity="0.28"
       />
       <path
-        d="M8.5 12.5H31.5L29.5 27.5H10.5L8.5 12.5Z"
+        d="M7 15.5H37L34.5 31H9.5L7 15.5Z"
         fill="#FFFFFF"
-        fillOpacity="0.14"
+        fillOpacity="0.12"
         stroke="#FFFFFF"
-        strokeOpacity="0.35"
-        strokeWidth="1.1"
+        strokeOpacity="0.22"
+        strokeWidth="1.15"
         strokeLinejoin="round"
       />
       <path
-        d="M12.5 12.5V27.5M20 12.5V27.5M27.5 12.5V27.5"
+        d="M11.5 15.5V31M22 15.5V31M32.5 15.5V31"
         stroke="#FFFFFF"
-        strokeOpacity="0.12"
-        strokeWidth="0.8"
+        strokeOpacity="0.1"
+        strokeWidth="0.85"
       />
       <path
-        d="M11 27.5C14.5 23.5 17.5 24.5 20 22.5C22.5 20.5 26 21.5 29.5 18.5"
-        stroke="#FFFFFF"
-        strokeWidth="1.45"
+        d="M9.5 31.5C14.5 25.5 18 26.5 22 24.5C26 22.5 30.5 23.5 35.5 17.5"
+        stroke={`url(#${uid}-route)`}
+        strokeWidth="2.35"
         strokeLinecap="round"
         strokeLinejoin="round"
-        strokeOpacity="0.9"
       />
-      <circle cx="11" cy="27.5" r="1.7" fill="#F97316" />
-      <circle cx="20" cy="22.5" r="1.5" fill="#FFFFFF" fillOpacity="0.95" />
-      <circle cx="29.5" cy="18.5" r="1.5" fill="#FFFFFF" fillOpacity="0.95" />
+      <circle cx="9.5" cy="31.5" r="2.1" fill="#F59E0B" stroke="#FFFFFF" strokeWidth="0.8" />
+      <circle cx="35.5" cy="17.5" r="1.9" fill="#FFFFFF" fillOpacity="0.95" />
       <path
-        d="M20 11.5c-2.35 0-4.25 1.9-4.25 4.25 0 3.15 4.25 7.75 4.25 7.75s4.25-4.6 4.25-7.75c0-2.35-1.9-4.25-4.25-4.25Z"
-        fill={`url(#${uid}-pin)`}
+        d="M22 12.5c-2.65 0-4.8 2.15-4.8 4.8 0 3.55 4.8 9 4.8 9s4.8-5.45 4.8-9c0-2.65-2.15-4.8-4.8-4.8Z"
+        fill="#FFFFFF"
       />
-      <circle cx="20" cy="15.75" r="1.55" fill="#0D9488" />
+      <circle cx="22" cy="17.3" r="2.15" fill="#14B8A6" />
+      <circle cx="22" cy="17.3" r="0.85" fill="#0F766E" />
     </svg>
   )
 }
@@ -253,7 +261,7 @@ const DIFERENCIAIS = [
 function Logo({ onClick }) {
   return (
     <button type="button" className="logo" onClick={onClick} aria-label="MeuRoteiro — ir para o início">
-      <span className="logo__mark"><LogoMark size={40} /></span>
+      <span className="logo__mark"><LogoMark size={46} /></span>
       <span className="logo__name">
         <span className="logo__prefix">Meu</span><span className="logo__accent">Roteiro</span>
       </span>
@@ -298,7 +306,7 @@ function Header({ menuOpen, setMenuOpen, onNav, onCriarRoteiro }) {
             Criar roteiro
           </button>
         </nav>
-        <button type="button" className="btn btn--primary btn--header" onClick={onCriarRoteiro}>
+        <button type="button" className="btn btn--primary btn--header btn--premium" onClick={onCriarRoteiro}>
           Criar roteiro
         </button>
         <button
