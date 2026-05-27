@@ -18,8 +18,19 @@ export const CATEGORIA_SPLITS = {
 /** @typedef {{ periodo: string, titulo: string, descricao: string, tempo: string, custo: number, mapQuery?: string }} Periodo */
 /** @typedef {{ titulo: string, periodos: Periodo[] }} DiaRoteiro */
 
+import {
+  DESTINATION_IMAGES,
+  getCardImage,
+  getHeroImage,
+  getCardImageAlt,
+  getHeroImageAlt,
+} from './destinationImages.js'
+
+export { DESTINATION_IMAGES, getCardImage, getHeroImage, getCardImageAlt, getHeroImageAlt }
+
+/** @deprecated Use getHeroImage */
 export function getImagemHero(destino) {
-  return destino.imagemHero ?? destino.imagemCapa ?? destino.imagem
+  return getHeroImage(destino)
 }
 
 export function getPrecoBase(destino) {
@@ -40,9 +51,11 @@ export const DESTINOS = [
     orcamentoBase: 290,
     duracaoIdeal: '3–4 dias',
     diasMax: 4,
-    imagem: '/images/destinos/gramado.jpg',
-    imagemHero: '/images/destinos/gramado-hero.jpg',
-    imagemAlt: 'Centro charmoso de Gramado com arquitetura europeia e clima de serra gaúcha',
+    cardImage: DESTINATION_IMAGES.gramado.card,
+    heroImage: DESTINATION_IMAGES.gramado.hero,
+    imagem: DESTINATION_IMAGES.gramado.card,
+    imagemHero: DESTINATION_IMAGES.gramado.hero,
+    imagemAlt: DESTINATION_IMAGES.gramado.alt.card,
     roteiro: [
       {
         titulo: 'Chegada e charme do centro',
@@ -87,9 +100,11 @@ export const DESTINOS = [
     orcamentoBase: 245,
     duracaoIdeal: '4–5 dias',
     diasMax: 5,
-    imagem: '/images/destinos/florianopolis.jpg',
-    imagemHero: '/images/destinos/florianopolis-hero.jpg',
-    imagemAlt: 'Praia ensolarada de Florianópolis com mar azul e costa verde',
+    cardImage: DESTINATION_IMAGES.florianopolis.card,
+    heroImage: DESTINATION_IMAGES.florianopolis.hero,
+    imagem: DESTINATION_IMAGES.florianopolis.card,
+    imagemHero: DESTINATION_IMAGES.florianopolis.hero,
+    imagemAlt: DESTINATION_IMAGES.florianopolis.alt.card,
     roteiro: [
       {
         titulo: 'Chegada e Lagoa da Conceição',
@@ -142,9 +157,11 @@ export const DESTINOS = [
     orcamentoBase: 310,
     duracaoIdeal: '3–5 dias',
     diasMax: 4,
-    imagem: '/images/destinos/bc.jpg',
-    imagemHero: '/images/destinos/bc-hero.jpg',
-    imagemAlt: 'Skyline de Balneário Camboriú com prédios altos à beira-mar',
+    cardImage: DESTINATION_IMAGES.bc.card,
+    heroImage: DESTINATION_IMAGES.bc.hero,
+    imagem: DESTINATION_IMAGES.bc.card,
+    imagemHero: DESTINATION_IMAGES.bc.hero,
+    imagemAlt: DESTINATION_IMAGES.bc.alt.card,
     roteiro: [
       {
         titulo: 'Orla e teleférico',
@@ -189,9 +206,11 @@ export const DESTINOS = [
     orcamentoBase: 265,
     duracaoIdeal: '3–4 dias',
     diasMax: 4,
-    imagem: '/images/destinos/foz.jpg',
-    imagemHero: '/images/destinos/foz-hero.jpg',
-    imagemAlt: 'Cataratas do Iguaçu com quedas d\'água e passarelas na mata atlântica',
+    cardImage: DESTINATION_IMAGES.foz.card,
+    heroImage: DESTINATION_IMAGES.foz.hero,
+    imagem: DESTINATION_IMAGES.foz.card,
+    imagemHero: DESTINATION_IMAGES.foz.hero,
+    imagemAlt: DESTINATION_IMAGES.foz.alt.card,
     roteiro: [
       {
         titulo: 'Cataratas — lado brasileiro',
@@ -236,9 +255,11 @@ export const DESTINOS = [
     orcamentoBase: 320,
     duracaoIdeal: '4–6 dias',
     diasMax: 5,
-    imagem: '/images/destinos/rio.jpg',
-    imagemHero: '/images/destinos/rio-hero.jpg',
-    imagemAlt: 'Cristo Redentor e paisagem icônica do Rio de Janeiro',
+    cardImage: DESTINATION_IMAGES.rio.card,
+    heroImage: DESTINATION_IMAGES.rio.hero,
+    imagem: DESTINATION_IMAGES.rio.card,
+    imagemHero: DESTINATION_IMAGES.rio.hero,
+    imagemAlt: DESTINATION_IMAGES.rio.alt.card,
     roteiro: [
       {
         titulo: 'Cartões-postais',
@@ -291,9 +312,11 @@ export const DESTINOS = [
     orcamentoBase: 285,
     duracaoIdeal: '3–5 dias',
     diasMax: 5,
-    imagem: '/images/destinos/sp.jpg',
-    imagemHero: '/images/destinos/sp-hero.jpg',
-    imagemAlt: 'Avenida Paulista e skyline urbano de São Paulo',
+    cardImage: DESTINATION_IMAGES.sp.card,
+    heroImage: DESTINATION_IMAGES.sp.hero,
+    imagem: DESTINATION_IMAGES.sp.card,
+    imagemHero: DESTINATION_IMAGES.sp.hero,
+    imagemAlt: DESTINATION_IMAGES.sp.alt.card,
     roteiro: [
       {
         titulo: 'Paulista e MASP',
